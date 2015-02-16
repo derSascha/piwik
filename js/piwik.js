@@ -2477,31 +2477,25 @@ if (typeof Piwik !== 'object') {
                     expireDateTime = time;
                 }
             }
-
-            function makeSureThereIsAGapAfterFirstTrackingRequestToPreventMultipleVisitorCreation(callback)
+            
+            function makeSureThereIsAGapAfterBetweenEachTrackingRequestToPreventMultipleVisitorCreation(callback)
             {
                 var now     = new Date();
                 var timeNow = now.getTime();
 
+                var delayInMs = 800;
+
+                // a request was sent before and we have to wait
                 if (timeNextTrackingRequestCanBeExecutedImmediately && timeNow < timeNextTrackingRequestCanBeExecutedImmediately) {
-                    // we are in the time frame shortly after the first request. we have to delay this request a bit to make sure
-                    // a visitor has been created meanwhile.
 
                     var timeToWait = timeNextTrackingRequestCanBeExecutedImmediately - timeNow;
-
                     setTimeout(callback, timeToWait);
-                    setExpireDateTime(timeToWait + 50); // set timeout is not necessarily executed at timeToWait so delay a bit more
-                    timeNextTrackingRequestCanBeExecutedImmediately += 50; // delay next tracking request by further 50ms to next execute them at same time
+                    timeNextTrackingRequestCanBeExecutedImmediately += delayInMs; // delay next tracking request by further 50ms 800ms
 
                     return;
                 }
 
-                if (timeNextTrackingRequestCanBeExecutedImmediately === false) {
-                    // it is the first request, we want to execute this one directly and delay all the next one(s) within a delay.
-                    // All requests after this delay can be executed as usual again
-                    var delayInMs = 800;
-                    timeNextTrackingRequestCanBeExecutedImmediately = timeNow + delayInMs;
-                }
+                timeNextTrackingRequestCanBeExecutedImmediately = timeNow + delayInMs;
 
                 callback();
             }
@@ -2512,7 +2506,7 @@ if (typeof Piwik !== 'object') {
             function sendRequest(request, delay, callback) {
 
                 if (!configDoNotTrack && request) {
-                    makeSureThereIsAGapAfterFirstTrackingRequestToPreventMultipleVisitorCreation(function () {
+                    makeSureThereIsAGapAfterBetweenEachTrackingRequestToPreventMultipleVisitorCreation(function () {
                         if (configRequestMethod === 'POST') {
                             sendXmlHttpRequest(request, callback);
                         } else {
@@ -2544,7 +2538,7 @@ if (typeof Piwik !== 'object') {
 
                 var bulk = '{"requests":["?' + requests.join('","?') + '"]}';
 
-                makeSureThereIsAGapAfterFirstTrackingRequestToPreventMultipleVisitorCreation(function () {
+                makeSureThereIsAGapAfterBetweenEachTrackingRequestToPreventMultipleVisitorCreation(function () {
                     sendXmlHttpRequest(bulk, null, false);
                     setExpireDateTime(delay);
                 });
