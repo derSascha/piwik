@@ -471,8 +471,11 @@ class Archive
         }
 
         if ($flat) {
-            $name .= '_flat';
-            $dataTable = $archive->getDataTable($name);
+            $dataTable = $archive->getDataTable($name, 'flat');
+            if (!$dataTable->getRowsCount() && !$dataTable->getMetadata('ts-archived')) {
+                // for old archives that do not have a flattened datatable archived
+                return self::getDataTableFromArchive($name, $idSite, $period, $date, $segment, $expanded = false, $idSubtable, $skipAggregationOfSubTables, $depth, $flat = false);
+            }
         } elseif ($expanded) {
             $dataTable = $archive->getDataTableExpanded($name, $idSubtable, $depth);
         } else {
