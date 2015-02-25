@@ -106,9 +106,9 @@ class API extends \Piwik\Plugin\API
      *
      * @return DataTable|DataTable\Map
      */
-    public function getPageUrlsFollowingSiteSearch($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false)
+    public function getPageUrlsFollowingSiteSearch($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false, $flat = false)
     {
-        $dataTable = $this->getPageUrls($idSite, $period, $date, $segment, $expanded, $idSubtable);
+        $dataTable = $this->getPageUrls($idSite, $period, $date, $segment, $expanded, $idSubtable, false, $flat);
         $this->keepPagesFollowingSearch($dataTable);
         return $dataTable;
     }
@@ -123,9 +123,9 @@ class API extends \Piwik\Plugin\API
      *
      * @return DataTable|DataTable\Map
      */
-    public function getPageTitlesFollowingSiteSearch($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false)
+    public function getPageTitlesFollowingSiteSearch($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false, $flat = false)
     {
-        $dataTable = $this->getPageTitles($idSite, $period, $date, $segment, $expanded, $idSubtable);
+        $dataTable = $this->getPageTitles($idSite, $period, $date, $segment, $expanded, $idSubtable, $flat);
         $this->keepPagesFollowingSearch($dataTable);
         return $dataTable;
     }
@@ -148,9 +148,9 @@ class API extends \Piwik\Plugin\API
      * Returns a DataTable with analytics information for every unique entry page URL, for
      * the specified site, period & segment.
      */
-    public function getEntryPageUrls($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false)
+    public function getEntryPageUrls($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false, $flat = false)
     {
-        $dataTable = $this->getPageUrls($idSite, $period, $date, $segment, $expanded, $idSubtable);
+        $dataTable = $this->getPageUrls($idSite, $period, $date, $segment, $expanded, $idSubtable, false, $flat);
         $this->filterNonEntryActions($dataTable);
         return $dataTable;
     }
@@ -159,9 +159,9 @@ class API extends \Piwik\Plugin\API
      * Returns a DataTable with analytics information for every unique exit page URL, for
      * the specified site, period & segment.
      */
-    public function getExitPageUrls($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false)
+    public function getExitPageUrls($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false, $flat)
     {
-        $dataTable = $this->getPageUrls($idSite, $period, $date, $segment, $expanded, $idSubtable);
+        $dataTable = $this->getPageUrls($idSite, $period, $date, $segment, $expanded, $idSubtable, false, $flat);
         $this->filterNonExitActions($dataTable);
         return $dataTable;
     }
@@ -175,9 +175,9 @@ class API extends \Piwik\Plugin\API
         return $dataTable;
     }
 
-    public function getPageTitles($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false)
+    public function getPageTitles($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false, $flat = false)
     {
-        $dataTable = $this->getDataTableFromArchive('Actions_actions', $idSite, $period, $date, $segment, $expanded, $idSubtable);
+        $dataTable = $this->getDataTableFromArchive('Actions_actions', $idSite, $period, $date, $segment, $expanded, $idSubtable, null, $flat);
         $this->filterActionsDataTable($dataTable, $expanded);
         return $dataTable;
     }
@@ -187,9 +187,9 @@ class API extends \Piwik\Plugin\API
      * for the given site, time period & segment.
      */
     public function getEntryPageTitles($idSite, $period, $date, $segment = false, $expanded = false,
-                                       $idSubtable = false)
+                                       $idSubtable = false, $flat = false)
     {
-        $dataTable = $this->getPageTitles($idSite, $period, $date, $segment, $expanded, $idSubtable);
+        $dataTable = $this->getPageTitles($idSite, $period, $date, $segment, $expanded, $idSubtable, $flat);
         $this->filterNonEntryActions($dataTable);
         return $dataTable;
     }
@@ -199,9 +199,9 @@ class API extends \Piwik\Plugin\API
      * for the given site, time period & segment.
      */
     public function getExitPageTitles($idSite, $period, $date, $segment = false, $expanded = false,
-                                      $idSubtable = false)
+                                      $idSubtable = false, $flat = false)
     {
-        $dataTable = $this->getPageTitles($idSite, $period, $date, $segment, $expanded, $idSubtable);
+        $dataTable = $this->getPageTitles($idSite, $period, $date, $segment, $expanded, $idSubtable, $flat);
         $this->filterNonExitActions($dataTable);
         return $dataTable;
     }
@@ -215,9 +215,9 @@ class API extends \Piwik\Plugin\API
         return $dataTable;
     }
 
-    public function getDownloads($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false)
+    public function getDownloads($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false, $flat = false)
     {
-        $dataTable = $this->getDataTableFromArchive('Actions_downloads', $idSite, $period, $date, $segment, $expanded, $idSubtable);
+        $dataTable = $this->getDataTableFromArchive('Actions_downloads', $idSite, $period, $date, $segment, $expanded, $idSubtable, null, $flat);
         $this->filterActionsDataTable($dataTable, $expanded);
         return $dataTable;
     }
@@ -230,9 +230,9 @@ class API extends \Piwik\Plugin\API
         return $dataTable;
     }
 
-    public function getOutlinks($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false)
+    public function getOutlinks($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false, $flat = false)
     {
-        $dataTable = $this->getDataTableFromArchive('Actions_outlink', $idSite, $period, $date, $segment, $expanded, $idSubtable);
+        $dataTable = $this->getDataTableFromArchive('Actions_outlink', $idSite, $period, $date, $segment, $expanded, $idSubtable, null, $flat);
         $this->filterActionsDataTable($dataTable, $expanded);
         return $dataTable;
     }
