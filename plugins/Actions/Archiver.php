@@ -504,7 +504,8 @@ class Archiver extends \Piwik\Plugin\Archiver
             ArchivingHelper::$maximumRowsInSubDataTable,
             ArchivingHelper::$columnToSortByBeforeTruncation,
             Metrics::$columnsAggregationOperation,
-            Metrics::$columnsToRenameAfterAggregation
+            Metrics::$columnsToRenameAfterAggregation,
+            $recursiveLabelSeparator = '/'
         );
 
         $dataTableToSum = array(

@@ -263,7 +263,6 @@ class DocumentationGenerator
         // the parameter 'serialize' sets php outputs human readable, used in system tests and debug
         // the parameter 'language' sets the language for the response (eg. country names)
         // the parameter 'flat' reduces a hierarchical table to a single level by concatenating labels
-        // the parameter 'include_aggregate_rows' can be set to include inner nodes in flat reports
         // the parameter 'translateColumnNames' can be set to translate metric names in csv/tsv exports
         $aParameters['format'] = false;
         $aParameters['hideIdSubDatable'] = false;
@@ -272,7 +271,6 @@ class DocumentationGenerator
         $aParameters['translateColumnNames'] = false;
         $aParameters['label'] = false;
         $aParameters['flat'] = false;
-        $aParameters['include_aggregate_rows'] = false;
         $aParameters['filter_limit'] = false; //@review without adding this, I can not set filter_limit in $otherRequestParameters system tests
         $aParameters['filter_sort_column'] = false; //@review without adding this, I can not set filter_sort_column in $otherRequestParameters system tests
         $aParameters['filter_sort_order'] = false; //@review without adding this, I can not set filter_sort_order in $otherRequestParameters system tests

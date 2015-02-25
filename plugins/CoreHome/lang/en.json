@@ -6,8 +6,6 @@
         "ClickToEditX": "Click to edit %s",
         "CloseWidgetDirections": "You can close this widget by clicking on the 'X' icon at the top of the widget.",
         "DataForThisReportHasBeenPurged": "The data for this report is more than %s months old and has been purged.",
-        "DataTableExcludeAggregateRows": "Aggregate rows are shown %s Hide them",
-        "DataTableIncludeAggregateRows": "Aggregate rows are hidden %s Show them",
         "DateFormat": "%longDay% %day% %longMonth% %longYear%",
         "Default": "default",
         "DonateCall1": "Piwik will always cost you nothing to use, but that doesn't mean it costs us nothing to make.",

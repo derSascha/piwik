@@ -175,8 +175,6 @@ class CoreHome extends \Piwik\Plugin
         $translationKeys[] = 'CoreHome_YouAreUsingTheLatestVersion';
         $translationKeys[] = 'CoreHome_IncludeRowsWithLowPopulation';
         $translationKeys[] = 'CoreHome_ExcludeRowsWithLowPopulation';
-        $translationKeys[] = 'CoreHome_DataTableIncludeAggregateRows';
-        $translationKeys[] = 'CoreHome_DataTableExcludeAggregateRows';
         $translationKeys[] = 'CoreHome_Default';
         $translationKeys[] = 'CoreHome_PageOf';
         $translationKeys[] = 'CoreHome_FlattenDataTable';

@@ -90,7 +90,6 @@ class API extends \Piwik\Plugin\API
     public function getPageUrls($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false,
                                 $depth = false, $flat = false)
     {
-        //$flat= false;
         $dataTable = $this->getDataTableFromArchive('Actions_actions_url', $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth, $flat);
         $this->filterActionsDataTable($dataTable, $expanded);
         return $dataTable;
@@ -159,7 +158,7 @@ class API extends \Piwik\Plugin\API
      * Returns a DataTable with analytics information for every unique exit page URL, for
      * the specified site, period & segment.
      */
-    public function getExitPageUrls($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false, $flat)
+    public function getExitPageUrls($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false, $flat = false)
     {
         $dataTable = $this->getPageUrls($idSite, $period, $date, $segment, $expanded, $idSubtable, false, $flat);
         $this->filterNonExitActions($dataTable);

@@ -92,13 +92,6 @@ describe("ViewDataTableTest", function () { // TODO: should remove Test suffix f
         }, done);
     });
 
-    it("should show aggregate rows when the aggregate rows option is clicked", function (done) {
-        expect.screenshot('12_aggregate_shown').to.be.capture(function (page) {
-            page.mouseMove('.tableConfiguration');
-            page.click('.dataTableIncludeAggregateRows');
-        }, done);
-    });
-
     it("should make the report hierarchical when the flatten link is clicked again", function (done) {
         expect.screenshot('13_make_hierarchical').to.be.capture(function (page) {
             page.mouseMove('.tableConfiguration');

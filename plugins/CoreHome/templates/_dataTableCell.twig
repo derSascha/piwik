@@ -10,7 +10,7 @@
 {% if column=='label' %}
     {% import 'macros.twig' as piwik %}
 
-    <span class='label{% if row.getMetadata('is_aggregate') %} highlighted{% endif %}'
+    <span class='label'
     {% if properties is defined and properties.tooltip_metadata_name is not empty %}title="{{ row.getMetadata(properties.tooltip_metadata_name) }}"{% endif %}>
         {{ piwik.logoHtml(row.getMetadata(), row.getColumn('label')) }}
         {% if row.getMetadata('html_label_prefix') %}<span class='label-prefix'>{{ row.getMetadata('html_label_prefix') | raw }}&nbsp;</span>{% endif -%}

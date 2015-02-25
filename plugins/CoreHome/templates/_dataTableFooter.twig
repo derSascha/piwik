@@ -88,11 +88,6 @@
                 <a class="tableConfigurationIcon" href="#"></a>
                 <ul>
                     {% if properties.show_flatten_table %}
-                        {% if clientSideParameters.flat is defined and clientSideParameters.flat == 1 %}
-                            <li>
-                                <div class="configItem dataTableIncludeAggregateRows"></div>
-                            </li>
-                        {% endif %}
                         <li>
                             <div class="configItem dataTableFlatten"></div>
                         </li>

@@ -59,19 +59,6 @@ class FlattenReportsTest extends SystemTestCase
                     'expanded' => '0'
                 )
             ));
-        $return[] = array(
-            'Actions.getPageUrls',
-            array(
-                'idSite'                 => $idSite,
-                'date'                   => $dateTime,
-                'period'                 => 'week',
-                'testSuffix'             => '_withAggregate',
-                'otherRequestParameters' => array(
-                    'flat'                   => '1',
-                    'include_aggregate_rows' => '1',
-                    'expanded'               => '0'
-                )
-            ));
 
         // custom variables for multiple days
         $return[] = array('CustomVariables.getCustomVariables', array(
@@ -80,7 +67,6 @@ class FlattenReportsTest extends SystemTestCase
             'otherRequestParameters' => array(
                 'date'                   => '2010-03-05,2010-03-08',
                 'flat'                   => '1',
-                'include_aggregate_rows' => '1',
                 'expanded'               => '0'
             )
         ));

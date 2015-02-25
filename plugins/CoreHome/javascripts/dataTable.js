@@ -161,7 +161,6 @@ $.extend(DataTable.prototype, UIControl.prototype, {
             'disable_generic_filters',
             'columns',
             'flat',
-            'include_aggregate_rows',
             'totalRows',
             'pivotBy',
             'pivotByColumn'
@@ -1102,9 +1101,6 @@ $.extend(DataTable.prototype, UIControl.prototype, {
 
                 if (typeof self.param.flat != "undefined") {
                     str += '&flat=' + (self.param.flat == 0 ? '0' : '1');
-                    if (typeof self.param.include_aggregate_rows != "undefined" && self.param.include_aggregate_rows == '1') {
-                        str += '&include_aggregate_rows=1';
-                    }
                     if (!self.param.flat
                         && typeof self.param.filter_pattern_recursive != "undefined"
                         && self.param.filter_pattern_recursive) {
@@ -1267,20 +1263,6 @@ $.extend(DataTable.prototype, UIControl.prototype, {
                 setText(this, 'flat', 'CoreHome_UnFlattenDataTable', 'CoreHome_FlattenDataTable');
             })
             .click(generateClickCallback('flat'));
-
-        $('.dataTableIncludeAggregateRows', domElem)
-            .each(function () {
-                setText(this, 'include_aggregate_rows', 'CoreHome_DataTableExcludeAggregateRows',
-                    'CoreHome_DataTableIncludeAggregateRows');
-            })
-            .click(generateClickCallback('include_aggregate_rows', function () {
-                if (self.param.include_aggregate_rows == 1) {
-                    // when including aggregate rows is enabled, we remove the sorting
-                    // this way, the aggregate rows appear directly before their children
-                    self.param.filter_sort_column = '';
-                    self.notifyWidgetParametersChange(domElem, {filter_sort_column: ''});
-                }
-            }));
 
         // handle pivot by
         $('.dataTablePivotBySubtable', domElem)

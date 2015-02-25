@@ -22,18 +22,6 @@ use Piwik\DataTable\Row;
 class Flattener extends DataTableManipulator
 {
 
-    private $includeAggregateRows = false;
-
-    /**
-     * If the flattener is used after calling this method, aggregate rows will
-     * be included in the result. This can be useful when they contain data that
-     * the leafs don't have (e.g. conversion stats in some cases).
-     */
-    public function includeAggregateRows()
-    {
-        $this->includeAggregateRows = true;
-    }
-
     /**
      * Separator for building recursive labels (or paths)
      * @var string
@@ -87,6 +75,11 @@ class Flattener extends DataTableManipulator
     private function flattenRow(Row $row, DataTable $dataTable,
                                 $labelPrefix = '', $parentLogo = false)
     {
+        if ($row->getMetadata('first_level_label') !== false) {
+            $row->setColumn('label', $row->getMetadata('first_level_label'));
+            $row->setMetadata('first_level_label', false);
+        }
+
         $label = $row->getColumn('label');
         if ($label !== false) {
             $label = trim($label);
@@ -107,15 +100,8 @@ class Flattener extends DataTableManipulator
         $row->removeSubtable();
 
         if ($subTable === null) {
-            if ($this->includeAggregateRows) {
-                $row->setMetadata('is_aggregate', 0);
-            }
             $dataTable->addRow($row);
         } else {
-            if ($this->includeAggregateRows) {
-                $row->setMetadata('is_aggregate', 1);
-                $dataTable->addRow($row);
-            }
             $prefix = $label . $this->recursiveLabelSeparator;
             foreach ($subTable->getRows() as $row) {
                 $this->flattenRow($row, $dataTable, $prefix, $logo);

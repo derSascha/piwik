@@ -142,9 +142,6 @@ class DataTablePostProcessor
     {
         if (Common::getRequestVar('flat', '0', 'string', $this->request) == '1') {
             $flattener = new Flattener($this->apiModule, $this->apiMethod, $this->request);
-            if (Common::getRequestVar('include_aggregate_rows', '0', 'string', $this->request) == '1') {
-                $flattener->includeAggregateRows();
-            }
             $dataTable = $flattener->flatten($dataTable);
         }
         return $dataTable;

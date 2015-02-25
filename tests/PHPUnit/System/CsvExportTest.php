@@ -27,9 +27,7 @@ class CsvExportTest extends SystemTestCase
 
         $apiToCall = array('VisitsSummary.get', 'CustomVariables.getCustomVariables');
 
-        $enExtraParam = array('expanded' => 0, 'flat' => 1, 'include_aggregate_rows' => 0, 'translateColumnNames' => 1);
-
-        $deExtraParam = array('expanded' => 0, 'flat' => 1, 'include_aggregate_rows' => 1, 'translateColumnNames' => 1);
+        $enExtraParam = array('expanded' => 0, 'flat' => 1, 'translateColumnNames' => 1);
 
         return array(
             array($apiToCall, array('idSite'                 => $idSite,
@@ -48,7 +46,7 @@ class CsvExportTest extends SystemTestCase
             array($apiToCall, array('idSite'                 => $idSite,
                                     'date'                   => $dateTime,
                                     'format'                 => 'csv',
-                                    'otherRequestParameters' => $deExtraParam,
+                                    'otherRequestParameters' => $enExtraParam,
                                     'language'               => 'de',
                                     'testSuffix'             => '_xp1_inner1_trans-de')),
 

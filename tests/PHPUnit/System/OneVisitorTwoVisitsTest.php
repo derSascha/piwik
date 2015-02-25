@@ -66,7 +66,6 @@ class OneVisitorTwoVisitsTest extends SystemTestCase
 
         $enExtraParam = array('expanded' => 1,
                               'flat' => 1,
-                              'include_aggregate_rows' => 0,
                               'translateColumnNames' => 1,
         );
         $bulkUrls = array(

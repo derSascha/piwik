@@ -9,6 +9,7 @@
 namespace Piwik\Plugins\Referrers;
 
 use Exception;
+use Piwik\Archive\DataTableRecordConfiguration;
 use Piwik\Common;
 use Piwik\Config;
 use Piwik\DataArray;
@@ -196,8 +197,18 @@ class Archiver extends \Piwik\Plugin\Archiver
 
         // insert DataTable reports
         foreach ($this->getRecordNames() as $recordName) {
-            $blob = $this->getDataArray($recordName)->asDataTable()->getSerialized($this->maximumRowsInDataTableLevelZero, $this->maximumRowsInSubDataTable, $this->columnToSortByBeforeTruncation);
-            $this->getProcessor()->insertBlobRecord($recordName, $blob);
+            $dataTable = $this->getDataArray($recordName)->asDataTable();
+
+            $config = new DataTableRecordConfiguration($recordName);
+            $config->maximumRowsInDataTableLevelZero = $this->maximumRowsInDataTableLevelZero;
+            $config->maximumRowsInSubDataTable = $this->maximumRowsInSubDataTable;
+            $config->columnToSortByBeforeTruncation = $this->columnToSortByBeforeTruncation;
+
+            if ($recordName === 'Referrers_urlByWebsite') {
+                $config->recursiveLabelSeparator = '/';
+            }
+
+            $this->getProcessor()->insertDataTableRecord($config, $dataTable);
         }
     }
 

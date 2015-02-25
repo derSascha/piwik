@@ -217,7 +217,6 @@ class Archiver extends \Piwik\Plugin\Archiver
             $config->maximumRowsInDataTableLevelZero = $this->maximumRowsInDataTable;
             $config->maximumRowsInSubDataTable = $this->maximumRowsInSubDataTable;
             $config->columnToSortByBeforeTruncation = $this->columnToSortByBeforeTruncation;
-            $config->recursiveLabelSeparator = ' - ';
 
             $this->getProcessor()->insertDataTableRecord($config, $dataTable);
         }
