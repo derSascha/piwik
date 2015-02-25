@@ -13,6 +13,7 @@ use Piwik\Metrics as PiwikMetrics;
 use Piwik\RankingQuery;
 use Piwik\Tracker\Action;
 use Piwik\Plugins\Actions\Actions\ActionSiteSearch;
+use Piwik\Archive\DataTableRecordConfiguration;
 
 /**
  * Class encapsulating logic to process Day/Period Archiving for the Actions reports
@@ -404,14 +405,6 @@ class Archiver extends \Piwik\Plugin\Archiver
         $this->insertOutlinksReports();
         $this->insertPageTitlesReports();
         $this->insertSiteSearchReports();
-
-        $this->getProcessor()->aggregateFlattenedDataTable(
-            self::PAGE_URLS_RECORD_NAME,
-            $this->actionsTablesByType[Action::TYPE_PAGE_URL],
-            $recursiveLabelSeparator = '/',
-            ArchivingHelper::$maximumRowsInDataTableLevelZero,
-            ArchivingHelper::$columnToSortByBeforeTruncation
-        );
     }
 
     protected function insertPageUrlsReports()
@@ -440,8 +433,14 @@ class Archiver extends \Piwik\Plugin\Archiver
     protected function insertTable(DataTable $dataTable, $recordName)
     {
         ArchivingHelper::deleteInvalidSummedColumnsFromDataTable($dataTable);
-        $report = $dataTable->getSerialized(ArchivingHelper::$maximumRowsInDataTableLevelZero, ArchivingHelper::$maximumRowsInSubDataTable, ArchivingHelper::$columnToSortByBeforeTruncation);
-        $this->getProcessor()->insertBlobRecord($recordName, $report);
+
+        $config = new DataTableRecordConfiguration($recordName);
+        $config->maximumRowsInDataTableLevelZero = ArchivingHelper::$maximumRowsInDataTableLevelZero;
+        $config->maximumRowsInSubDataTable = ArchivingHelper::$maximumRowsInSubDataTable;
+        $config->columnToSortByBeforeTruncation = ArchivingHelper::$columnToSortByBeforeTruncation;
+        $config->recursiveLabelSeparator = '/';
+
+        $this->getProcessor()->insertDataTableRecord($config, $dataTable);
     }
 
     protected function insertDownloadsReports()

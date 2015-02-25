@@ -19,6 +19,7 @@ use Piwik\DataTable\Map;
 use Piwik\DataTable\Row;
 use Piwik\Db;
 use Piwik\Period;
+use Piwik\Archive\DataTableRecordConfiguration;
 
 /**
  * Used by {@link Piwik\Plugin\Archiver} instances to insert and aggregate archive data.
@@ -235,31 +236,21 @@ class ArchiveProcessor
         return $nameToCount;
     }
 
-    public function aggregateFlattenedDataTable($recordName,
-                                                DataTableInterface $dataTable,
-                                                $recursiveLabelSeparator,
-                                                $maxRowsInDataTable = null,
-                                                $columnToSortByBeforeTruncation = null)
+    private function aggregateFlattenedDataTable(DataTableRecordConfiguration $config,
+                                                 DataTableInterface $dataTable)
     {
-        $nameToCount = array();
         $latestUsedTableId = Manager::getInstance()->getMostRecentTableId();
 
         $flattened = new DataTable();
 
-        $this->flattenRows($flattened, $dataTable, null, $recursiveLabelSeparator);
+        $this->flattenRows($flattened, $dataTable, null, $config->recursiveLabelSeparator);
 
-        $rowsCount = $flattened->getRowsCount();
-        $nameToCount[$recordName]['level0']    = $rowsCount;
-        $nameToCount[$recordName]['recursive'] = $rowsCount;
-
-        $blob = $flattened->getSerialized($maxRowsInDataTable, null, $columnToSortByBeforeTruncation);
+        $blob = $flattened->getSerialized($config->maximumRowsInDataTableLevelZero, null, $config->columnToSortByBeforeTruncation);
         Common::destroy($flattened);
-        $this->insertBlobRecord($recordName . '_flat', $blob);
 
-        unset($blob);
         DataTable\Manager::getInstance()->deleteAll($latestUsedTableId);
 
-        return $nameToCount;
+        return $blob;
     }
 
     private function flattenRows(DataTable $tableToFill, DataTable $tableToFlatten, $label, $separator)
@@ -281,7 +272,9 @@ class ArchiveProcessor
             if (empty($subtable)) {
                 $columns = $row->getColumns();
                 $columns['label'] = $label;
-                $tableToFill->addRowFromSimpleArray($columns);
+                $metadata = $row->getMetadata();
+                $newRow = new Row(array(Row::COLUMNS => $columns, Row::METADATA => $metadata));
+                $tableToFill->addRow($newRow);
             } else {
                 $this->flattenRows($tableToFill, $subtable, $label, $separator);
             }
@@ -388,6 +381,34 @@ class ArchiveProcessor
     public function insertBlobRecord($name, $values)
     {
         $this->archiveWriter->insertBlobRecord($name, $values);
+    }
+
+    /**
+     * Caches one or more blob records in the archive for this processor's site, period
+     * and segment.
+     *
+     * @param string $name The name of the record, eg, 'Referrers_type'.
+     * @param string|array $values A blob string or an array of blob strings. If an array
+     *                             is used, the first element in the array will be inserted
+     *                             with the `$name` name. The others will be inserted with
+     *                             `$name . '_' . $index` as the record name (where $index is
+     *                             the index of the blob record in `$values`).
+     * @api
+     */
+    public function insertDataTableRecord(DataTableRecordConfiguration $config,
+                                          DataTable $dataTable)
+    {
+        $blob = $this->aggregateFlattenedDataTable($config, $dataTable);
+
+        $this->archiveWriter->insertBlobRecord($config->recordName . '_flat', $blob);
+
+        $blob = $dataTable->getSerialized(
+            $config->maximumRowsInDataTableLevelZero,
+            $config->maximumRowsInSubDataTable,
+            $config->columnToSortByBeforeTruncation
+        );
+
+        $this->archiveWriter->insertBlobRecord($config->recordName, $blob);
     }
 
     /**

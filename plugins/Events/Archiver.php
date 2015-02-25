@@ -13,6 +13,7 @@ use Piwik\DataArray;
 use Piwik\DataTable;
 use Piwik\Metrics;
 use Piwik\Plugins\Actions\ArchivingHelper;
+use Piwik\Archive\DataTableRecordConfiguration;
 use Piwik\RankingQuery;
 use Piwik\Tracker\Action;
 
@@ -212,24 +213,14 @@ class Archiver extends \Piwik\Plugin\Archiver
         foreach ($this->arrays as $recordName => $dataArray) {
             $dataTable = $dataArray->asDataTable();
 
-            $this->getProcessor()->aggregateFlattenedDataTable(
-                $recordName,
-                $dataTable,
-                $recursiveLabelSeparator = ' - ',
-                $this->maximumRowsInDataTable,
-                $this->columnToSortByBeforeTruncation
-            );
+            $config = new DataTableRecordConfiguration($recordName);
+            $config->maximumRowsInDataTableLevelZero = $this->maximumRowsInDataTable;
+            $config->maximumRowsInSubDataTable = $this->maximumRowsInSubDataTable;
+            $config->columnToSortByBeforeTruncation = $this->columnToSortByBeforeTruncation;
+            $config->recursiveLabelSeparator = ' - ';
 
-           // $dataTable = $dataArray->asDataTable();
-            $blob = $dataTable->getSerialized(
-                $this->maximumRowsInDataTable,
-                $this->maximumRowsInSubDataTable,
-                $this->columnToSortByBeforeTruncation);
-            $this->getProcessor()->insertBlobRecord($recordName, $blob);
-
+            $this->getProcessor()->insertDataTableRecord($config, $dataTable);
         }
-
-
     }
 
     /**
