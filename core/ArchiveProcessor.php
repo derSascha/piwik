@@ -204,7 +204,8 @@ class ArchiveProcessor
                                               $maximumRowsInSubDataTable = null,
                                               $columnToSortByBeforeTruncation = null,
                                               &$columnsAggregationOperation = null,
-                                              $columnsToRenameAfterAggregation = null)
+                                              $columnsToRenameAfterAggregation = null,
+                                              $recursiveLabelSeparator = null)
     {
         if (!is_array($recordNames)) {
             $recordNames = array($recordNames);
@@ -225,6 +226,16 @@ class ArchiveProcessor
             }
             $nameToCount[$recordName]['recursive'] = $rowsCountRecursive;
 
+            if ($recursiveLabelSeparator !== null) {
+                $config = new DataTableRecordConfiguration($recordName);
+                $config->maximumRowsInDataTableLevelZero = $maximumRowsInDataTableLevelZero;
+                $config->maximumRowsInSubDataTable = $maximumRowsInSubDataTable;
+                $config->columnToSortByBeforeTruncation = $columnToSortByBeforeTruncation;
+                $config->recursiveLabelSeparator = $recursiveLabelSeparator;
+                $blob = $this->getFlattenedDataTableBlob($config, $table);
+                $this->insertBlobRecord($recordName . '_flat', $blob);
+            }
+
             $blob = $table->getSerialized($maximumRowsInDataTableLevelZero, $maximumRowsInSubDataTable, $columnToSortByBeforeTruncation);
             Common::destroy($table);
             $this->insertBlobRecord($recordName, $blob);
@@ -236,14 +247,14 @@ class ArchiveProcessor
         return $nameToCount;
     }
 
-    private function aggregateFlattenedDataTable(DataTableRecordConfiguration $config,
-                                                 DataTableInterface $dataTable)
+    private function getFlattenedDataTableBlob(DataTableRecordConfiguration $config,
+                                               DataTable $dataTable)
     {
         $latestUsedTableId = Manager::getInstance()->getMostRecentTableId();
 
         $flattened = new DataTable();
 
-        $this->flattenRows($flattened, $dataTable, null, $config->recursiveLabelSeparator);
+        $this->flattenRows($flattened, $dataTable, null, null, $config->recursiveLabelSeparator);
 
         $blob = $flattened->getSerialized($config->maximumRowsInDataTableLevelZero, null, $config->columnToSortByBeforeTruncation);
         Common::destroy($flattened);
@@ -253,30 +264,38 @@ class ArchiveProcessor
         return $blob;
     }
 
-    private function flattenRows(DataTable $tableToFill, DataTable $tableToFlatten, $label, $separator)
+    private function flattenRows(DataTable $tableToFill, DataTable $tableToFlatten, $level0Label, $label, $separator)
     {
         foreach ($tableToFlatten->getRows() as $row) {
-            if (null === $label) {
-                $label = trim($row->getColumn('label'));
-            } else {
-                $rowLabel = trim($row->getColumn('label'));
-                if (!Common::stringEndsWith($label, $separator) && $separator !== substr($rowLabel, 0, 1)) {
-                    $label .= $separator;
-                }
+            $rowLabel = trim($row->getColumn('label'));
 
-                $label .= trim($row->getColumn('label'));
+            if (null === $level0Label) {
+                $firstLevelLabel = $rowLabel;
+            } else {
+                $firstLevelLabel = $level0Label;
+            }
+
+            if (null === $label) {
+                $flatLabel = $rowLabel;
+            } else {
+                if (!Common::stringEndsWith($label, $separator) && $separator !== substr($rowLabel, 0, 1)) {
+                    $flatLabel = $label . $separator . $rowLabel;
+                } else {
+                    $flatLabel = $label . $rowLabel;
+                }
             }
 
             $subtable = $row->getSubtable();
 
             if (empty($subtable)) {
                 $columns = $row->getColumns();
-                $columns['label'] = $label;
+                $columns['label'] = $firstLevelLabel;
                 $metadata = $row->getMetadata();
+                $metadata['first_level_label'] = $flatLabel;
                 $newRow = new Row(array(Row::COLUMNS => $columns, Row::METADATA => $metadata));
                 $tableToFill->addRow($newRow);
             } else {
-                $this->flattenRows($tableToFill, $subtable, $label, $separator);
+                $this->flattenRows($tableToFill, $subtable, $firstLevelLabel, $flatLabel, $separator);
             }
         }
 
@@ -398,9 +417,10 @@ class ArchiveProcessor
     public function insertDataTableRecord(DataTableRecordConfiguration $config,
                                           DataTable $dataTable)
     {
-        $blob = $this->aggregateFlattenedDataTable($config, $dataTable);
-
-        $this->archiveWriter->insertBlobRecord($config->recordName . '_flat', $blob);
+        if ($config->recursiveLabelSeparator !== null) {
+            $blob = $this->getFlattenedDataTableBlob($config, $dataTable);
+            $this->insertBlobRecord($config->recordName . '_flat', $blob);
+        }
 
         $blob = $dataTable->getSerialized(
             $config->maximumRowsInDataTableLevelZero,
@@ -408,7 +428,7 @@ class ArchiveProcessor
             $config->columnToSortByBeforeTruncation
         );
 
-        $this->archiveWriter->insertBlobRecord($config->recordName, $blob);
+        $this->insertBlobRecord($config->recordName, $blob);
     }
 
     /**
