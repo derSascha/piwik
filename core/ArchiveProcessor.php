@@ -417,9 +417,9 @@ class ArchiveProcessor
     public function insertDataTableRecord(DataTableRecordConfiguration $config,
                                           DataTable $dataTable)
     {
+        $blobFlattened = array();
         if ($config->recursiveLabelSeparator !== null) {
-            $blob = $this->getFlattenedDataTableBlob($config, $dataTable);
-            $this->insertBlobRecord($config->recordName . '_flat', $blob);
+            $blobFlattened = $this->getFlattenedDataTableBlob($config, $dataTable);
         }
 
         $blob = $dataTable->getSerialized(
@@ -427,6 +427,10 @@ class ArchiveProcessor
             $config->maximumRowsInSubDataTable,
             $config->columnToSortByBeforeTruncation
         );
+
+        if (!empty($blobFlattened[0])) {
+            $blob['flat'] = $blobFlattened[0];
+        }
 
         $this->insertBlobRecord($config->recordName, $blob);
     }
