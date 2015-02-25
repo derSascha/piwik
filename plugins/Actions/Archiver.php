@@ -494,33 +494,37 @@ class Archiver extends \Piwik\Plugin\Archiver
 
     public function aggregateMultipleReports()
     {
+        $config = new DataTableRecordConfiguration('');
+        $config->maximumRowsInDataTableLevelZero = ArchivingHelper::$maximumRowsInDataTableLevelZero;
+        $config->maximumRowsInSubDataTable       = ArchivingHelper::$maximumRowsInSubDataTable;
+        $config->columnToSortByBeforeTruncation  = ArchivingHelper::$columnToSortByBeforeTruncation;
+        $config->columnsAggregationOperation     = Metrics::$columnsAggregationOperation;
+        $config->columnsToRenameAfterAggregation = Metrics::$columnsToRenameAfterAggregation;
+        $config->recursiveLabelSeparator         = '/';
+
         ArchivingHelper::reloadConfig();
         $dataTableToSum = array(
             self::PAGE_TITLES_RECORD_NAME,
             self::PAGE_URLS_RECORD_NAME,
         );
-        $this->getProcessor()->aggregateDataTableRecords($dataTableToSum,
-            ArchivingHelper::$maximumRowsInDataTableLevelZero,
-            ArchivingHelper::$maximumRowsInSubDataTable,
-            ArchivingHelper::$columnToSortByBeforeTruncation,
-            Metrics::$columnsAggregationOperation,
-            Metrics::$columnsToRenameAfterAggregation,
-            $recursiveLabelSeparator = '/'
-        );
+
+        foreach ($dataTableToSum as $recordName) {
+            $config->recordName = $recordName;
+            $this->getProcessor()->insertAggregatedDataTableRecord($config);
+        }
 
         $dataTableToSum = array(
             self::DOWNLOADS_RECORD_NAME,
             self::OUTLINKS_RECORD_NAME,
             self::SITE_SEARCH_RECORD_NAME,
         );
-        $aggregation = null;
-        $nameToCount = $this->getProcessor()->aggregateDataTableRecords($dataTableToSum,
-            ArchivingHelper::$maximumRowsInDataTableLevelZero,
-            ArchivingHelper::$maximumRowsInSubDataTable,
-            ArchivingHelper::$columnToSortByBeforeTruncation,
-            $aggregation,
-            Metrics::$columnsToRenameAfterAggregation
-        );
+
+        $nameToCount = array();
+        foreach ($dataTableToSum as $recordName) {
+            $config->recordName = $recordName;
+            $config->columnsAggregationOperation = null;
+            $nameToCount[$recordName] = $this->getProcessor()->insertAggregatedDataTableRecord($config);
+        }
 
         $this->getProcessor()->aggregateNumericMetrics($this->getMetricNames());
 

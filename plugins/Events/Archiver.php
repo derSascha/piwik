@@ -98,8 +98,12 @@ class Archiver extends \Piwik\Plugin\Archiver
 
     public function aggregateMultipleReports()
     {
-        $dataTableToSum = $this->getRecordNames();
-        $this->getProcessor()->aggregateDataTableRecords($dataTableToSum, $this->maximumRowsInDataTable, $this->maximumRowsInSubDataTable, $this->columnToSortByBeforeTruncation);
+        $recordNames = $this->getRecordNames();
+
+        foreach ($recordNames as $recordName) {
+            $config = $this->getDefaultDataTableRecordConfig($recordName);
+            $this->getProcessor()->insertAggregatedDataTableRecord($config);
+        }
     }
 
     protected function getRecordNames()
@@ -211,15 +215,22 @@ class Archiver extends \Piwik\Plugin\Archiver
     protected function insertDayReports()
     {
         foreach ($this->arrays as $recordName => $dataArray) {
+            $config    = $this->getDefaultDataTableRecordConfig($recordName);
             $dataTable = $dataArray->asDataTable();
-
-            $config = new DataTableRecordConfiguration($recordName);
-            $config->maximumRowsInDataTableLevelZero = $this->maximumRowsInDataTable;
-            $config->maximumRowsInSubDataTable = $this->maximumRowsInSubDataTable;
-            $config->columnToSortByBeforeTruncation = $this->columnToSortByBeforeTruncation;
 
             $this->getProcessor()->insertDataTableRecord($config, $dataTable);
         }
+    }
+
+    private function getDefaultDataTableRecordConfig($recordName)
+    {
+        $config = new DataTableRecordConfiguration($recordName);
+        $config->maximumRowsInDataTableLevelZero = $this->maximumRowsInDataTable;
+        $config->maximumRowsInSubDataTable = $this->maximumRowsInSubDataTable;
+        $config->columnToSortByBeforeTruncation = $this->columnToSortByBeforeTruncation;
+        $config->recursiveLabelSeparator = ' - ';
+
+        return $config;
     }
 
     /**

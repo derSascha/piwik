@@ -197,19 +197,27 @@ class Archiver extends \Piwik\Plugin\Archiver
 
         // insert DataTable reports
         foreach ($this->getRecordNames() as $recordName) {
+            $config    = $this->getDefaultDataTableRecordConfig($recordName);
             $dataTable = $this->getDataArray($recordName)->asDataTable();
-
-            $config = new DataTableRecordConfiguration($recordName);
-            $config->maximumRowsInDataTableLevelZero = $this->maximumRowsInDataTableLevelZero;
-            $config->maximumRowsInSubDataTable = $this->maximumRowsInSubDataTable;
-            $config->columnToSortByBeforeTruncation = $this->columnToSortByBeforeTruncation;
-
-            if ($recordName === 'Referrers_urlByWebsite') {
-                $config->recursiveLabelSeparator = '/';
-            }
 
             $this->getProcessor()->insertDataTableRecord($config, $dataTable);
         }
+    }
+
+    private function getDefaultDataTableRecordConfig($recordName)
+    {
+        $config = new DataTableRecordConfiguration($recordName);
+        $config->maximumRowsInDataTableLevelZero = $this->maximumRowsInDataTableLevelZero;
+        $config->maximumRowsInSubDataTable = $this->maximumRowsInSubDataTable;
+        $config->columnToSortByBeforeTruncation = $this->columnToSortByBeforeTruncation;
+        $config->recursiveLabelSeparator = ' - ';
+
+        if ($recordName === self::WEBSITES_RECORD_NAME) {
+            $config->recursiveLabelSeparator = '/';
+            $config->flattenCallbackForSubtableLabel =  __NAMESPACE__ . '\getPathFromUrl';
+        }
+
+        return $config;
     }
 
     protected function insertDayNumericMetrics()
@@ -227,8 +235,12 @@ class Archiver extends \Piwik\Plugin\Archiver
 
     public function aggregateMultipleReports()
     {
-        $dataTableToSum = $this->getRecordNames();
-        $nameToCount = $this->getProcessor()->aggregateDataTableRecords($dataTableToSum, $this->maximumRowsInDataTableLevelZero, $this->maximumRowsInSubDataTable, $this->columnToSortByBeforeTruncation);
+        $recordNames = $this->getRecordNames();
+        $nameToCount = array();
+        foreach ($recordNames as $recordName) {
+            $config = $this->getDefaultDataTableRecordConfig($recordName);
+            $nameToCount[$recordName] = $this->getProcessor()->insertAggregatedDataTableRecord($config);
+        }
 
         $mappingFromArchiveName = array(
             self::METRIC_DISTINCT_SEARCH_ENGINE_RECORD_NAME =>

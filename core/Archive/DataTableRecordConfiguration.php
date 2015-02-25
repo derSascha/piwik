@@ -13,7 +13,10 @@ class DataTableRecordConfiguration {
     public $maximumRowsInDataTableLevelZero;
     public $maximumRowsInSubDataTable;
     public $columnToSortByBeforeTruncation;
-    public $recursiveLabelSeparator = ' - ';
+    public $recursiveLabelSeparator;
+    public $flattenCallbackForSubtableLabel;
+    public $columnsAggregationOperation;
+    public $columnsToRenameAfterAggregation;
 
     public function __construct($recordName)
     {

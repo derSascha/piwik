@@ -188,6 +188,7 @@ class ArchiveProcessor
      * @param array $columnsToRenameAfterAggregation Columns mapped to new names for columns that must change names
      *                                               when summed because they cannot be summed, eg,
      *                                               `array('nb_uniq_visitors' => 'sum_daily_nb_uniq_visitors')`.
+     * @param string|null $recursiveLabelSeparator If defined it will archive a flattened datatable
      * @return array Returns the row counts of each aggregated report before truncation, eg,
      *
      *                   array(
@@ -204,8 +205,7 @@ class ArchiveProcessor
                                               $maximumRowsInSubDataTable = null,
                                               $columnToSortByBeforeTruncation = null,
                                               &$columnsAggregationOperation = null,
-                                              $columnsToRenameAfterAggregation = null,
-                                              $recursiveLabelSeparator = null)
+                                              $columnsToRenameAfterAggregation = null)
     {
         if (!is_array($recordNames)) {
             $recordNames = array($recordNames);
@@ -213,36 +213,54 @@ class ArchiveProcessor
 
         $nameToCount = array();
         foreach ($recordNames as $recordName) {
-            $latestUsedTableId = Manager::getInstance()->getMostRecentTableId();
+            $config = new DataTableRecordConfiguration($recordName);
+            $config->maximumRowsInDataTableLevelZero = $maximumRowsInDataTableLevelZero;
+            $config->maximumRowsInSubDataTable       = $maximumRowsInSubDataTable;
+            $config->columnToSortByBeforeTruncation  = $columnToSortByBeforeTruncation;
+            $config->columnsAggregationOperation     = $columnsAggregationOperation;
+            $config->columnsToRenameAfterAggregation = $columnsToRenameAfterAggregation;
+            $config->recursiveLabelSeparator         = null;
 
-            $table = $this->aggregateDataTableRecord($recordName, $columnsAggregationOperation, $columnsToRenameAfterAggregation);
-
-            $rowsCount = $table->getRowsCount();
-            $nameToCount[$recordName]['level0'] = $rowsCount;
-
-            $rowsCountRecursive = $rowsCount;
-            if ($this->isAggregateSubTables()) {
-                $rowsCountRecursive = $table->getRowsCountRecursive();
-            }
-            $nameToCount[$recordName]['recursive'] = $rowsCountRecursive;
-
-            if ($recursiveLabelSeparator !== null) {
-                $config = new DataTableRecordConfiguration($recordName);
-                $config->maximumRowsInDataTableLevelZero = $maximumRowsInDataTableLevelZero;
-                $config->maximumRowsInSubDataTable = $maximumRowsInSubDataTable;
-                $config->columnToSortByBeforeTruncation = $columnToSortByBeforeTruncation;
-                $config->recursiveLabelSeparator = $recursiveLabelSeparator;
-                $blob = $this->getFlattenedDataTableBlob($config, $table);
-                $this->insertBlobRecord($recordName . '_flat', $blob);
-            }
-
-            $blob = $table->getSerialized($maximumRowsInDataTableLevelZero, $maximumRowsInSubDataTable, $columnToSortByBeforeTruncation);
-            Common::destroy($table);
-            $this->insertBlobRecord($recordName, $blob);
-
-            unset($blob);
-            DataTable\Manager::getInstance()->deleteAll($latestUsedTableId);
+            $nameToCount[$recordName] = $this->insertAggregatedDataTableRecord($config);
         }
+
+        return $nameToCount;
+    }
+
+    /**
+     * @see aggregateDataTableRecords()
+     * @api
+     */
+    public function insertAggregatedDataTableRecord(DataTableRecordConfiguration $config)
+    {
+        $nameToCount = array();
+
+        $latestUsedTableId = Manager::getInstance()->getMostRecentTableId();
+
+        $table = $this->aggregateDataTableRecord($config->recordName, $config->columnsAggregationOperation, $config->columnsToRenameAfterAggregation);
+
+        $nameToCount['level0'] = $table->getRowsCount();
+        $nameToCount['recursive'] = $nameToCount['level0'];
+        if ($this->isAggregateSubTables()) {
+            $nameToCount['recursive'] = $table->getRowsCountRecursive();
+        }
+
+        $blobFlattened = array();
+        if ($config->recursiveLabelSeparator !== null) {
+            $blobFlattened = $this->getFlattenedDataTableBlob($config, $table);
+        }
+
+        $blob = $table->getSerialized($config->maximumRowsInDataTableLevelZero, $config->maximumRowsInSubDataTable, $config->columnToSortByBeforeTruncation);
+        if (!empty($blobFlattened[0])) {
+            $blob['flat'] = $blobFlattened[0];
+        }
+
+        Common::destroy($table);
+        $this->insertBlobRecord($config->recordName, $blob);
+
+        unset($blob);
+        unset($blobFlattened);
+        DataTable\Manager::getInstance()->deleteAll($latestUsedTableId);
 
         return $nameToCount;
     }
@@ -254,7 +272,9 @@ class ArchiveProcessor
 
         $flattened = new DataTable();
 
-        $this->flattenRows($flattened, $dataTable, null, null, $config->recursiveLabelSeparator);
+        foreach ($dataTable->getRows() as $row) {
+            $this->flattenRow($flattened, $row, $config);
+        }
 
         $blob = $flattened->getSerialized($config->maximumRowsInDataTableLevelZero, null, $config->columnToSortByBeforeTruncation);
         Common::destroy($flattened);
@@ -264,41 +284,49 @@ class ArchiveProcessor
         return $blob;
     }
 
-    private function flattenRows(DataTable $tableToFill, DataTable $tableToFlatten, $level0Label, $label, $separator)
+    private function flattenRow(DataTable $tableToFill, Row $row, DataTableRecordConfiguration $config, $level0Label = null, $labelPrefix = null)
     {
-        foreach ($tableToFlatten->getRows() as $row) {
-            $rowLabel = trim($row->getColumn('label'));
+        $isRootLevel = $level0Label === null;
+        $separator = $config->recursiveLabelSeparator;
+        $label = $row->getColumn('label');
 
-            if (null === $level0Label) {
-                $firstLevelLabel = $rowLabel;
-            } else {
-                $firstLevelLabel = $level0Label;
+        if ($label !== false) {
+            if (!$isRootLevel && $config->flattenCallbackForSubtableLabel) {
+                $label = call_user_func($config->flattenCallbackForSubtableLabel, $label);
             }
 
-            if (null === $label) {
-                $flatLabel = $rowLabel;
-            } else {
-                if (!Common::stringEndsWith($label, $separator) && $separator !== substr($rowLabel, 0, 1)) {
-                    $flatLabel = $label . $separator . $rowLabel;
+            $label = trim($label);
+
+            if ($labelPrefix === null) {
+                $labelPrefix = $label;
+            } else if ($label !== false) {
+                if (!Common::stringEndsWith($labelPrefix, $separator) &&
+                    ($separator !== '/' || $separator !== substr($label, 0, 1))) {
+                    $labelPrefix = $labelPrefix . $separator . $label;
                 } else {
-                    $flatLabel = $label . $rowLabel;
+                    $labelPrefix = $labelPrefix . $label;
                 }
-            }
-
-            $subtable = $row->getSubtable();
-
-            if (empty($subtable)) {
-                $columns = $row->getColumns();
-                $columns['label'] = $firstLevelLabel;
-                $metadata = $row->getMetadata();
-                $metadata['first_level_label'] = $flatLabel;
-                $newRow = new Row(array(Row::COLUMNS => $columns, Row::METADATA => $metadata));
-                $tableToFill->addRow($newRow);
-            } else {
-                $this->flattenRows($tableToFill, $subtable, $firstLevelLabel, $flatLabel, $separator);
             }
         }
 
+        if ($isRootLevel) {
+            $level0Label = $label;
+        }
+
+        $subtable = $row->getSubtable();
+
+        if (empty($subtable)) {
+            $columns = $row->getColumns();
+            $columns['label'] = $level0Label;
+            $metadata = $row->getMetadata();
+            $metadata['first_level_label'] = $labelPrefix;
+            $newRow = new Row(array(Row::COLUMNS => $columns, Row::METADATA => $metadata));
+            $tableToFill->addRow($newRow);
+        } else {
+            foreach ($subtable->getRows() as $row) {
+                $this->flattenRow($tableToFill, $row, $config, $level0Label, $labelPrefix);
+            }
+        }
     }
 
     /**
@@ -433,6 +461,9 @@ class ArchiveProcessor
         }
 
         $this->insertBlobRecord($config->recordName, $blob);
+
+        unset($blob);
+        unset($blobFlattened);
     }
 
     /**
