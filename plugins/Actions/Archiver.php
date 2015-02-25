@@ -404,6 +404,14 @@ class Archiver extends \Piwik\Plugin\Archiver
         $this->insertOutlinksReports();
         $this->insertPageTitlesReports();
         $this->insertSiteSearchReports();
+
+        $this->getProcessor()->aggregateFlattenedDataTable(
+            self::PAGE_URLS_RECORD_NAME,
+            $this->actionsTablesByType[Action::TYPE_PAGE_URL],
+            $recursiveLabelSeparator = '/',
+            ArchivingHelper::$maximumRowsInDataTableLevelZero,
+            ArchivingHelper::$columnToSortByBeforeTruncation
+        );
     }
 
     protected function insertPageUrlsReports()

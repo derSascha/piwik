@@ -148,14 +148,14 @@ class API extends \Piwik\Plugin\API
         }
     }
 
-    protected function getDataTable($name, $idSite, $period, $date, $segment, $expanded = false, $idSubtable = null, $secondaryDimension = false)
+    protected function getDataTable($name, $idSite, $period, $date, $segment, $expanded = false, $idSubtable = null, $secondaryDimension = false, $flat = false)
     {
         Piwik::checkUserHasViewAccess($idSite);
         $this->checkSecondaryDimension($name, $secondaryDimension);
         $recordName = $this->getRecordNameForAction($name, $secondaryDimension);
-        $dataTable = Archive::getDataTableFromArchive($recordName, $idSite, $period, $date, $segment, $expanded, $idSubtable);
+        $dataTable = Archive::getDataTableFromArchive($recordName, $idSite, $period, $date, $segment, $expanded, $idSubtable, false, null, $flat);
 
-        if (empty($idSubtable)) {
+        if (empty($idSubtable) && !$flat) {
             $dataTable->filter('AddSegmentValue', array(function ($label) {
                 if ($label === Archiver::EVENT_NAME_NOT_SET) {
                     return false;
@@ -169,49 +169,49 @@ class API extends \Piwik\Plugin\API
         return $dataTable;
     }
 
-    public function getCategory($idSite, $period, $date, $segment = false, $expanded = false, $secondaryDimension = false)
+    public function getCategory($idSite, $period, $date, $segment = false, $expanded = false, $secondaryDimension = false, $flat = false)
     {
-        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded, $idSubtable = false, $secondaryDimension);
+        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded, $idSubtable = false, $secondaryDimension, $flat);
     }
 
-    public function getAction($idSite, $period, $date, $segment = false, $expanded = false, $secondaryDimension = false)
+    public function getAction($idSite, $period, $date, $segment = false, $expanded = false, $secondaryDimension = false, $flat = false)
     {
-        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded, $idSubtable = false, $secondaryDimension);
+        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded, $idSubtable = false, $secondaryDimension, $flat);
     }
 
-    public function getName($idSite, $period, $date, $segment = false, $expanded = false, $secondaryDimension = false)
+    public function getName($idSite, $period, $date, $segment = false, $expanded = false, $secondaryDimension = false, $flat = false)
     {
-        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded, $idSubtable = false, $secondaryDimension);
+        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded, $idSubtable = false, $secondaryDimension, $flat);
     }
 
-    public function getActionFromCategoryId($idSite, $period, $date, $idSubtable, $segment = false)
+    public function getActionFromCategoryId($idSite, $period, $date, $idSubtable, $segment = false, $flat = false)
     {
-        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded = false, $idSubtable);
+        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded = false, $idSubtable, $flat);
     }
 
-    public function getNameFromCategoryId($idSite, $period, $date, $idSubtable, $segment = false)
+    public function getNameFromCategoryId($idSite, $period, $date, $idSubtable, $segment = false, $flat = false)
     {
-        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded = false, $idSubtable);
+        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded = false, $idSubtable, $flat);
     }
 
-    public function getCategoryFromActionId($idSite, $period, $date, $idSubtable, $segment = false)
+    public function getCategoryFromActionId($idSite, $period, $date, $idSubtable, $segment = false, $flat = false)
     {
-        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded = false, $idSubtable);
+        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded = false, $idSubtable, $flat);
     }
 
-    public function getNameFromActionId($idSite, $period, $date, $idSubtable, $segment = false)
+    public function getNameFromActionId($idSite, $period, $date, $idSubtable, $segment = false, $flat = false)
     {
-        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded = false, $idSubtable);
+        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded = false, $idSubtable, $flat);
     }
 
-    public function getActionFromNameId($idSite, $period, $date, $idSubtable, $segment = false)
+    public function getActionFromNameId($idSite, $period, $date, $idSubtable, $segment = false, $flat = false)
     {
-        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded = false, $idSubtable);
+        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded = false, $idSubtable, $flat);
     }
 
-    public function getCategoryFromNameId($idSite, $period, $date, $idSubtable, $segment = false)
+    public function getCategoryFromNameId($idSite, $period, $date, $idSubtable, $segment = false, $flat = false)
     {
-        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded = false, $idSubtable);
+        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded = false, $idSubtable, $flat);
     }
 
     /**

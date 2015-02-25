@@ -88,9 +88,10 @@ class API extends \Piwik\Plugin\API
      * @return DataTable|DataTable\Map
      */
     public function getPageUrls($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false,
-                                $depth = false)
+                                $depth = false, $flat = false)
     {
-        $dataTable = $this->getDataTableFromArchive('Actions_actions_url', $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth);
+        //$flat= false;
+        $dataTable = $this->getDataTableFromArchive('Actions_actions_url', $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth, $flat);
         $this->filterActionsDataTable($dataTable, $expanded);
         return $dataTable;
     }
@@ -500,7 +501,7 @@ class API extends \Piwik\Plugin\API
         );
     }
 
-    protected function getDataTableFromArchive($name, $idSite, $period, $date, $segment, $expanded = false, $idSubtable = null, $depth = null)
+    protected function getDataTableFromArchive($name, $idSite, $period, $date, $segment, $expanded = false, $idSubtable = null, $depth = null, $flat = false)
     {
         $skipAggregationOfSubTables = false;
         if ($period == 'range'
@@ -510,7 +511,7 @@ class API extends \Piwik\Plugin\API
         ) {
             $skipAggregationOfSubTables = false;
         }
-        return Archive::getDataTableFromArchive($name, $idSite, $period, $date, $segment, $expanded, $idSubtable, $skipAggregationOfSubTables, $depth);
+        return Archive::getDataTableFromArchive($name, $idSite, $period, $date, $segment, $expanded, $idSubtable, $skipAggregationOfSubTables, $depth, $flat);
     }
 
     private function addPageProcessedMetrics(DataTable\DataTableInterface $dataTable)

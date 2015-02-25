@@ -457,7 +457,7 @@ class Archive
      *                                 information
      */
     public static function getDataTableFromArchive($name, $idSite, $period, $date, $segment, $expanded,
-                                                   $idSubtable = null, $skipAggregationOfSubTables = false, $depth = null)
+                                                   $idSubtable = null, $skipAggregationOfSubTables = false, $depth = null, $flat = false)
     {
         Piwik::checkUserHasViewAccess($idSite);
 
@@ -470,7 +470,10 @@ class Archive
             $idSubtable = null;
         }
 
-        if ($expanded) {
+        if ($flat) {
+            $name .= '_flat';
+            $dataTable = $archive->getDataTable($name);
+        } elseif ($expanded) {
             $dataTable = $archive->getDataTableExpanded($name, $idSubtable, $depth);
         } else {
             $dataTable = $archive->getDataTable($name, $idSubtable);

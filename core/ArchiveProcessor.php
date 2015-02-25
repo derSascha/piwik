@@ -13,6 +13,7 @@ use Piwik\ArchiveProcessor\Parameters;
 use Piwik\ArchiveProcessor\Rules;
 use Piwik\DataAccess\ArchiveWriter;
 use Piwik\DataAccess\LogAggregator;
+use Piwik\DataTable\DataTableInterface;
 use Piwik\DataTable\Manager;
 use Piwik\DataTable\Map;
 use Piwik\DataTable\Row;
@@ -234,6 +235,60 @@ class ArchiveProcessor
         return $nameToCount;
     }
 
+    public function aggregateFlattenedDataTable($recordName,
+                                                DataTableInterface $dataTable,
+                                                $recursiveLabelSeparator,
+                                                $maxRowsInDataTable = null,
+                                                $columnToSortByBeforeTruncation = null)
+    {
+        $nameToCount = array();
+        $latestUsedTableId = Manager::getInstance()->getMostRecentTableId();
+
+        $flattened = new DataTable();
+
+        $this->flattenRows($flattened, $dataTable, null, $recursiveLabelSeparator);
+
+        $rowsCount = $flattened->getRowsCount();
+        $nameToCount[$recordName]['level0']    = $rowsCount;
+        $nameToCount[$recordName]['recursive'] = $rowsCount;
+
+        $blob = $flattened->getSerialized($maxRowsInDataTable, null, $columnToSortByBeforeTruncation);
+        Common::destroy($flattened);
+        $this->insertBlobRecord($recordName . '_flat', $blob);
+
+        unset($blob);
+        DataTable\Manager::getInstance()->deleteAll($latestUsedTableId);
+
+        return $nameToCount;
+    }
+
+    private function flattenRows(DataTable $tableToFill, DataTable $tableToFlatten, $label, $separator)
+    {
+        foreach ($tableToFlatten->getRows() as $row) {
+            if (null === $label) {
+                $label = trim($row->getColumn('label'));
+            } else {
+                $rowLabel = trim($row->getColumn('label'));
+                if (!Common::stringEndsWith($label, $separator) && $separator !== substr($rowLabel, 0, 1)) {
+                    $label .= $separator;
+                }
+
+                $label .= trim($row->getColumn('label'));
+            }
+
+            $subtable = $row->getSubtable();
+
+            if (empty($subtable)) {
+                $columns = $row->getColumns();
+                $columns['label'] = $label;
+                $tableToFill->addRowFromSimpleArray($columns);
+            } else {
+                $this->flattenRows($tableToFill, $subtable, $label, $separator);
+            }
+        }
+
+    }
+
     /**
      * Aggregates one or more metrics for every subperiod of the current period and inserts the results
      * as metrics for the current period.
@@ -344,7 +399,7 @@ class ArchiveProcessor
      * @param array $columnsToRenameAfterAggregation columns in the array (old name, new name) to be renamed as the sum operation is not valid on them (eg. nb_uniq_visitors->sum_daily_nb_uniq_visitors)
      * @return DataTable
      */
-    protected function aggregateDataTableRecord($name, $columnsAggregationOperation = null, $columnsToRenameAfterAggregation = null)
+    private function aggregateDataTableRecord($name, $columnsAggregationOperation = null, $columnsToRenameAfterAggregation = null)
     {
         if ($this->isAggregateSubTables()) {
             // By default we shall aggregate all sub-tables.
