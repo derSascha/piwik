@@ -342,6 +342,15 @@ class DataTable implements DataTableInterface, \IteratorAggregate, \ArrayAccess
     }
 
     /**
+     * @ignore
+     */
+    public function setRows($rows)
+    {
+        unset($this->rows);
+        $this->rows = $rows;
+    }
+
+    /**
      * Sorts the DataTable rows using the supplied callback function.
      *
      * @param string $functionCallback A comparison callback compatible with {@link usort}.
@@ -350,11 +359,11 @@ class DataTable implements DataTableInterface, \IteratorAggregate, \ArrayAccess
      */
     public function sort($functionCallback, $columnSortedBy)
     {
-        $this->indexNotUpToDate = true;
-        $this->tableSortedBy = $columnSortedBy;
+        $this->setTableSortedBy($columnSortedBy);
+
         usort($this->rows, $functionCallback);
 
-        if ($this->enableRecursiveSort === true) {
+        if ($this->sortRecursiveEnabled()) {
             foreach ($this->getRows() as $row) {
 
                 $subTable = $row->getSubtable();
@@ -385,6 +394,23 @@ class DataTable implements DataTableInterface, \IteratorAggregate, \ArrayAccess
     public function enableRecursiveSort()
     {
         $this->enableRecursiveSort = true;
+    }
+
+    /**
+     * @ignore
+     */
+    public function sortRecursiveEnabled()
+    {
+        return $this->enableRecursiveSort === true;
+    }
+
+    /**
+     * @ignore
+     */
+    public function setTableSortedBy($column)
+    {
+        $this->indexNotUpToDate = true;
+        $this->tableSortedBy = $column;
     }
 
     /**
