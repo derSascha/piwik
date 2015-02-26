@@ -120,6 +120,8 @@ abstract class DataTableManipulator
             if ($table) {
                 return $table;
             }
+
+            $idSubTable = $row->getMetadata('idsubdatatable_in_db');
         }
 
         $request['idSubtable'] = $idSubTable;
