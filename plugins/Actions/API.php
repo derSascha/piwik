@@ -95,7 +95,25 @@ class API extends \Piwik\Plugin\API
         }
 
         $dataTable = $this->getDataTableFromArchive('Actions_actions_url', $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth);
-        $this->filterActionsDataTable($dataTable, $expanded);
+        $this->filterActionsDataTable($dataTable, $expanded, $flat);
+
+        if ($flat) {
+            /*
+            $self = $this;
+            $dataTable->filter('Flatten', array('/', function (DataTable $subTable) use($self) {
+                $self->filterActionsSubDataTable($subTable);
+            }));*/
+
+            ArchivingHelper::reloadConfig();
+
+            $dataTable->filter('Flatten', array('/', ArchivingHelper::$defaultActionName,
+                null, function (DataTable\Row $row) {
+                $url = $row->getMetadata('url');
+                if ($url) {
+                    $row->setMetadata('segmentValue', urldecode($url));
+                }
+            }));
+        }
 
         return $dataTable;
     }
@@ -451,13 +469,14 @@ class API extends \Piwik\Plugin\API
      *
      * @param DataTable|DataTable\Simple|DataTable\Map $dataTable
      * @param bool $expanded
+     * @param bool $flat
      */
-    protected function filterActionsDataTable($dataTable, $expanded = false)
+    private function filterActionsDataTable($dataTable, $expanded = false, $flat = false)
     {
         // Must be applied before Sort in this case, since the DataTable can contain both int and strings indexes
         // (in the transition period between pre 1.2 and post 1.2 datatable structure)
         $dataTable->filter('ReplaceColumnNames');
-        $dataTable->filter('Sort', array('nb_visits', 'desc', $naturalSort = false, $expanded));
+
         $dataTable->filter(function (DataTable $dataTable) {
             foreach ($dataTable->getRows() as $row) {
                 $url = $row->getMetadata('url');
@@ -466,12 +485,33 @@ class API extends \Piwik\Plugin\API
                 }
             }
         });
-
-        $dataTable->filter('GroupBy', array('label', function ($label) {
+/*
+        $dataTable->queueFilter('GroupBy', array('label', function ($label) {
             return urldecode($label);
         }));
-
+*/
         $dataTable->queueFilter('ReplaceSummaryRowLabel');
+
+        return $dataTable;
+    }
+
+    /**
+     * Common filters for all Actions API
+     *
+     * @param DataTable|DataTable\Simple|DataTable\Map $dataTable
+     * @param bool $expanded
+     * @param bool $flat
+     */
+    public function filterActionsSubDataTable($dataTable)
+    {
+        $dataTable->filter(function (DataTable $dataTable) {
+            foreach ($dataTable->getRows() as $row) {
+                $url = $row->getMetadata('url');
+                if ($url) {
+                    $row->setMetadata('segmentValue', urldecode($url));
+                }
+            }
+        });
     }
 
     /**

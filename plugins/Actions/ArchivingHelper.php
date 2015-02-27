@@ -301,7 +301,7 @@ class ArchivingHelper
 
     protected static $actionUrlCategoryDelimiter = null;
     protected static $actionTitleCategoryDelimiter = null;
-    protected static $defaultActionName = null;
+    public static $defaultActionName = null;
     protected static $defaultActionNameWhenNotDefined = null;
     protected static $defaultActionUrlWhenNotDefined = null;
 

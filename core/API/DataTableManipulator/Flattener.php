@@ -46,6 +46,12 @@ class Flattener extends DataTableManipulator
      */
     public function flatten($dataTable)
     {
+        $isFlattened = $dataTable->getMetadata('isFlattened');
+        if ($isFlattened) {
+            $dataTable->getMetadata('isFlattened', false);
+            return $dataTable;
+        }
+
         if ($this->apiModule == 'Actions' || $this->apiMethod == 'getWebsites') {
             $this->recursiveLabelSeparator = '/';
         }
