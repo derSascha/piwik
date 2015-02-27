@@ -295,22 +295,32 @@ class API extends \Piwik\Plugin\API
         return $dataTable;
     }
 
-    public function getWebsites($idSite, $period, $date, $segment = false, $expanded = false)
+    public function getWebsites($idSite, $period, $date, $segment = false, $expanded = false, $flat = false)
     {
+        if ($flat) {
+            $expanded = true;
+        }
+
         $dataTable = $this->getDataTable(Archiver::WEBSITES_RECORD_NAME, $idSite, $period, $date, $segment, $expanded);
-        $dataTable->filter('AddSegmentByLabel', array('referrerName'));
+
+        if (!$flat) {
+            $dataTable->filter('AddSegmentByLabel', array('referrerName'));
+        } else {
+            $self = $this;
+            $dataTable->filter('Flatten', array('/',
+                function (DataTable $subtable) use ($self) {
+                    $self->filterUrlsFromWebsiteId($subtable, true);
+            }));
+        }
+
         return $dataTable;
     }
 
     public function getUrlsFromWebsiteId($idSite, $period, $date, $idSubtable, $segment = false)
     {
         $dataTable = $this->getDataTable(Archiver::WEBSITES_RECORD_NAME, $idSite, $period, $date, $segment, $expanded = false, $idSubtable);
-        // the htmlspecialchars_decode call is for BC for before 1.1
-        // as the Referrer URL was previously encoded in the log tables, but is now recorded raw
-        $dataTable->queueFilter('ColumnCallbackAddMetadata', array('label', 'url', function ($label) {
-            return htmlspecialchars_decode($label);
-        }));
-        $dataTable->queueFilter('ColumnCallbackReplace', array('label', __NAMESPACE__ . '\getPathFromUrl'));
+        $this->filterUrlsFromWebsiteId($dataTable, false);
+
         return $dataTable;
     }
 
@@ -537,6 +547,18 @@ class API extends \Piwik\Plugin\API
                 }
             }
         }
+    }
+
+    public function filterUrlsFromWebsiteId($dataTable, $filterNow)
+    {
+        $filter = $filterNow ? 'filter' : 'queueFilter';
+
+        // the htmlspecialchars_decode call is for BC for before 1.1
+        // as the Referrer URL was previously encoded in the log tables, but is now recorded raw
+        $dataTable->$filter('ColumnCallbackAddMetadata', array('label', 'url', function ($label) {
+            return htmlspecialchars_decode($label);
+        }));
+        $dataTable->$filter('ColumnCallbackReplace', array('label', __NAMESPACE__ . '\getPathFromUrl'));
     }
 
 }
