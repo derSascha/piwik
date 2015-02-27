@@ -148,14 +148,19 @@ class API extends \Piwik\Plugin\API
         }
     }
 
-    protected function getDataTable($name, $idSite, $period, $date, $segment, $expanded = false, $idSubtable = null, $secondaryDimension = false)
+    protected function getDataTable($name, $idSite, $period, $date, $segment, $expanded = false, $idSubtable = null, $secondaryDimension = false, $flat = false)
     {
         Piwik::checkUserHasViewAccess($idSite);
         $this->checkSecondaryDimension($name, $secondaryDimension);
         $recordName = $this->getRecordNameForAction($name, $secondaryDimension);
+
+        if ($flat) {
+            $expanded = true;
+        }
+
         $dataTable = Archive::getDataTableFromArchive($recordName, $idSite, $period, $date, $segment, $expanded, $idSubtable);
 
-        if (empty($idSubtable)) {
+        if (empty($idSubtable) && !$flat) {
             $dataTable->filter('AddSegmentValue', array(function ($label) {
                 if ($label === Archiver::EVENT_NAME_NOT_SET) {
                     return false;
@@ -165,23 +170,32 @@ class API extends \Piwik\Plugin\API
             }));
         }
 
-        $this->filterDataTable($dataTable);
+        $this->filterDataTable($dataTable, false);
+
+        if ($flat) {
+            $self = $this;
+            $dataTable->filter('Flatten', array(' - ',
+                function (DataTable $subtable) use ($self) {
+                    $self->filterDataTable($subtable, true);
+            }));
+        }
+
         return $dataTable;
     }
 
-    public function getCategory($idSite, $period, $date, $segment = false, $expanded = false, $secondaryDimension = false)
+    public function getCategory($idSite, $period, $date, $segment = false, $expanded = false, $secondaryDimension = false, $flat = false)
     {
-        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded, $idSubtable = false, $secondaryDimension);
+        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded, $idSubtable = false, $secondaryDimension, $flat);
     }
 
-    public function getAction($idSite, $period, $date, $segment = false, $expanded = false, $secondaryDimension = false)
+    public function getAction($idSite, $period, $date, $segment = false, $expanded = false, $secondaryDimension = false, $flat = false)
     {
-        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded, $idSubtable = false, $secondaryDimension);
+        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded, $idSubtable = false, $secondaryDimension, $flat);
     }
 
-    public function getName($idSite, $period, $date, $segment = false, $expanded = false, $secondaryDimension = false)
+    public function getName($idSite, $period, $date, $segment = false, $expanded = false, $secondaryDimension = false, $flat = false)
     {
-        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded, $idSubtable = false, $secondaryDimension);
+        return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded, $idSubtable = false, $secondaryDimension, $flat);
     }
 
     public function getActionFromCategoryId($idSite, $period, $date, $idSubtable, $segment = false)
@@ -216,12 +230,14 @@ class API extends \Piwik\Plugin\API
 
     /**
      * @param DataTable $dataTable
+     * @ignore
      */
-    protected function filterDataTable($dataTable)
+    public function filterDataTable($dataTable, $filterNow)
     {
-        $dataTable->filter('Sort', array(Metrics::INDEX_NB_VISITS));
-        $dataTable->queueFilter('ReplaceColumnNames');
-        $dataTable->queueFilter('ReplaceSummaryRowLabel');
+        $filter = $filterNow ? 'filter' : 'queueFilter';
+
+        $dataTable->$filter('ReplaceColumnNames');
+        $dataTable->$filter('ReplaceSummaryRowLabel');
         $dataTable->filter(function (DataTable $table) {
             $row = $table->getRowFromLabel(Archiver::EVENT_NAME_NOT_SET);
             if ($row) {
