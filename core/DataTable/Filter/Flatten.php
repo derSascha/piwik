@@ -54,10 +54,9 @@ class Flatten extends BaseFilter
 
     private $rows = array();
 
-    public function __construct($table, $recursiveLabelSeparator, $summaryRowLabel, $subTableCallback = null, $rowCallback = null)
+    public function __construct($table, $recursiveLabelSeparator, $subTableCallback = null, $rowCallback = null)
     {
         $this->recursiveLabelSeparator = $recursiveLabelSeparator;
-        $this->summaryRowLabel = $summaryRowLabel;
         $this->subTableCallback = $subTableCallback;
         $this->rowCallback = $rowCallback;
         parent::__construct($table);
@@ -71,6 +70,8 @@ class Flatten extends BaseFilter
      */
     public function filter($table)
     {
+        $table->applyQueuedFilters();
+
         $table->setMetadata('isFlattened', true);
         $rows = $table->getRows();
         foreach ($rows as $row) {
@@ -92,10 +93,8 @@ class Flatten extends BaseFilter
     private function flattenRow(Row $row, $isRootLevel, $labelPrefix = '', $parentLogo = false)
     {
         $label = $row->getColumn('label');
+
         if ($label !== false) {
-            if ($label === DataTable::LABEL_SUMMARY_ROW) {
-                $label = $this->summaryRowLabel;
-            }
             $label = trim($label);
             if (substr($label, 0, 1) == '/' && $this->recursiveLabelSeparator == '/') {
                 $label = substr($label, 1);
@@ -110,6 +109,7 @@ class Flatten extends BaseFilter
             $row->setMetadata('logo', $logo);
         }
 
+        /** @var DataTable $subTable */
         $subTable = $row->getSubtable();
         $row->removeSubtable();
 
@@ -120,7 +120,7 @@ class Flatten extends BaseFilter
             $this->rows[] = $row;
         } else {
             if ($this->subTableCallback) {
-                call_user_func($this->subTableCallback, $subTable);
+                call_user_func($this->subTableCallback, $subTable, $row);
             }
 
             $prefix = $label . $this->recursiveLabelSeparator;

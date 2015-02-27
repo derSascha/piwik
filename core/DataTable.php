@@ -423,6 +423,14 @@ class DataTable implements DataTableInterface, \IteratorAggregate, \ArrayAccess
     }
 
     /**
+     * @ignore
+     */
+    public function disableRecursiveFilters()
+    {
+        $this->enableRecursiveFilters = false;
+    }
+
+    /**
      * Applies a filter to this datatable.
      *
      * If {@link enableRecursiveFilters()} was called, the filter will be applied

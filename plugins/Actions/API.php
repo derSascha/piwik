@@ -95,6 +95,11 @@ class API extends \Piwik\Plugin\API
         }
 
         $dataTable = $this->getDataTableFromArchive('Actions_actions_url', $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth);
+
+        if ($flat) {
+        ///    $dataTable->disableRecursiveFilters();
+        }
+
         $this->filterActionsDataTable($dataTable, $expanded, $flat);
 
         if ($flat) {
@@ -104,14 +109,15 @@ class API extends \Piwik\Plugin\API
                 $self->filterActionsSubDataTable($subTable);
             }));*/
 
-            ArchivingHelper::reloadConfig();
-
-            $dataTable->filter('Flatten', array('/', ArchivingHelper::$defaultActionName,
-                null, function (DataTable\Row $row) {
-                $url = $row->getMetadata('url');
-                if ($url) {
-                    $row->setMetadata('segmentValue', urldecode($url));
-                }
+            $dataTable->filter('Flatten', array('/',
+                function (DataTable $subtable) {
+                    $subtable->filter('ReplaceSummaryRowLabel');
+                },
+                function (DataTable\Row $row) {
+                    $url = $row->getMetadata('url');
+                    if ($url) {
+                        $row->setMetadata('segmentValue', urldecode($url));
+                    }
             }));
         }
 
