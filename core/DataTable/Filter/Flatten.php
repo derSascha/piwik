@@ -71,7 +71,8 @@ class Flatten extends BaseFilter
         $table->applyQueuedFilters();
 
         $table->setMetadata('isFlattened', true);
-        $rows = $table->getRows();
+        $rows = $table->getRowsWithoutSummaryRow();
+
         foreach ($rows as $id => $row) {
             $this->flattenRow($row, $id);
         }

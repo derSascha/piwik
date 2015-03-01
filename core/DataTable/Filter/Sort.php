@@ -259,10 +259,7 @@ Sort extends BaseFilter
     {
         $table->setTableSortedBy($this->columnToSort);
 
-        $rows = $table->getRows();
-        if (array_key_exists(DataTable::ID_SUMMARY_ROW, $rows)) {
-            unset($rows[DataTable::ID_SUMMARY_ROW]);
-        }
+        $rows = $table->getRowsWithoutSummaryRow();
 
         $values = array();
         foreach ($rows as $key => $row) {
