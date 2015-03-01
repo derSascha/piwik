@@ -46,12 +46,6 @@ class Flattener extends DataTableManipulator
      */
     public function flatten($dataTable)
     {
-        $isFlattened = $dataTable->getMetadata('isFlattened');
-        if ($isFlattened) {
-            $dataTable->getMetadata('isFlattened', false);
-            return $dataTable;
-        }
-
         if ($this->apiModule == 'Actions' || $this->apiMethod == 'getWebsites') {
             $this->recursiveLabelSeparator = '/';
         }
@@ -68,6 +62,13 @@ class Flattener extends DataTableManipulator
      */
     protected function manipulateDataTable($dataTable)
     {
+        $isFlattened = $dataTable->getMetadata('isFlattened');
+        
+        if ($isFlattened) {
+            $dataTable->getMetadata('isFlattened', false);
+            return $dataTable;
+        }
+
         // apply filters now since subtables have their filters applied before generic filters. if we don't do this
         // now, we'll try to apply filters to rows that have already been manipulated. this results in errors like
         // 'column ... already exists'.
