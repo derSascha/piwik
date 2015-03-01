@@ -63,7 +63,7 @@ class Flattener extends DataTableManipulator
     protected function manipulateDataTable($dataTable)
     {
         $isFlattened = $dataTable->getMetadata('isFlattened');
-        
+
         if ($isFlattened) {
             $dataTable->getMetadata('isFlattened', false);
             return $dataTable;

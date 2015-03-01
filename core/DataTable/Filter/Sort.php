@@ -276,7 +276,7 @@ Sort extends BaseFilter
             $sortedRows[$key] = $rows[$key];
         }
 
-        $table->setRows($sortedRows);
+        $table->setRows(array_values($sortedRows));
 
         unset($rows);
         unset($sortedRows);

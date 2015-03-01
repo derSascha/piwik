@@ -50,15 +50,13 @@ class Flatten extends BaseFilter
     public $recursiveLabelSeparator = ' - ';
 
     private $subTableCallback;
-    private $rowCallback;
 
     private $rows = array();
 
-    public function __construct($table, $recursiveLabelSeparator, $subTableCallback = null, $rowCallback = null)
+    public function __construct($table, $recursiveLabelSeparator, $subTableCallback = null)
     {
         $this->recursiveLabelSeparator = $recursiveLabelSeparator;
         $this->subTableCallback = $subTableCallback;
-        $this->rowCallback = $rowCallback;
         parent::__construct($table);
     }
 
@@ -74,8 +72,8 @@ class Flatten extends BaseFilter
 
         $table->setMetadata('isFlattened', true);
         $rows = $table->getRows();
-        foreach ($rows as $row) {
-            $this->flattenRow($row, true);
+        foreach ($rows as $id => $row) {
+            $this->flattenRow($row, $id);
         }
 
         $table->setRows($this->rows);
@@ -86,19 +84,23 @@ class Flatten extends BaseFilter
     /**
      * @param Row $row
      * @param DataTable $dataTable
-     * @param bool $isRootLevel
+     * @param mixed $rowId
      * @param string $labelPrefix
      * @param bool $parentLogo
      */
-    private function flattenRow(Row $row, $isRootLevel, $labelPrefix = '', $parentLogo = false)
+    private function flattenRow(Row $row, $rowId, $labelPrefix = '', $parentLogo = false)
     {
         $label = $row->getColumn('label');
 
         if ($label !== false) {
             $label = trim($label);
+
             if (substr($label, 0, 1) == '/' && $this->recursiveLabelSeparator == '/') {
                 $label = substr($label, 1);
+            } elseif ($rowId === DataTable::ID_SUMMARY_ROW && $label !== DataTable::LABEL_SUMMARY_ROW) {
+                $label = ' - ' . $label;
             }
+
             $label = $labelPrefix . $label;
             $row->setColumn('label', $label);
         }
@@ -114,18 +116,17 @@ class Flatten extends BaseFilter
         $row->removeSubtable();
 
         if (empty($subTable)) {
-            if (!$isRootLevel && $this->rowCallback) {
-                call_user_func($this->rowCallback, $row);
-            }
             $this->rows[] = $row;
         } else {
             if ($this->subTableCallback) {
                 call_user_func($this->subTableCallback, $subTable, $row);
             }
 
+            $subTable->applyQueuedFilters();
+
             $prefix = $label . $this->recursiveLabelSeparator;
-            foreach ($subTable->getRows() as $row) {
-                $this->flattenRow($row, false, $prefix, $logo);
+            foreach ($subTable->getRows() as $rowId => $row) {
+                $this->flattenRow($row, $rowId, $prefix, $logo);
             }
         }
     }

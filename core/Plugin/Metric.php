@@ -108,7 +108,6 @@ abstract class Metric
      */
     public static function getMetric($row, $columnName, $mappingNameToId = null)
     {
-        static $mappingNameToId;
         if (empty($mappingNameToId)) {
             $mappingNameToId = Metrics::getMappingFromNameToId();
         }

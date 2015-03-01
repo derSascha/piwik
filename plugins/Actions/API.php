@@ -103,22 +103,20 @@ class API extends \Piwik\Plugin\API
         $this->filterActionsDataTable($dataTable, $expanded, $flat);
 
         if ($flat) {
-            /*
-            $self = $this;
-            $dataTable->filter('Flatten', array('/', function (DataTable $subTable) use($self) {
-                $self->filterActionsSubDataTable($subTable);
-            }));*/
-
             $dataTable->filter('Flatten', array('/',
                 function (DataTable $subtable) {
                     $subtable->filter('ReplaceSummaryRowLabel');
+                    $subtable->filter(function (DataTable $dataTable) {
+                        foreach ($dataTable->getRows() as $row) {
+                            $url = $row->getMetadata('url');
+                            if ($url) {
+                                $row->setMetadata('segmentValue', urldecode($url));
+                            }
+                        }
+                    });
                 },
-                function (DataTable\Row $row) {
-                    $url = $row->getMetadata('url');
-                    if ($url) {
-                        $row->setMetadata('segmentValue', urldecode($url));
-                    }
-            }));
+                )
+            );
         }
 
         return $dataTable;

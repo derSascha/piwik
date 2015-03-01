@@ -170,13 +170,13 @@ class API extends \Piwik\Plugin\API
             }));
         }
 
-        $this->filterDataTable($dataTable, false);
+        $this->filterDataTable($dataTable);
 
         if ($flat) {
             $self = $this;
             $dataTable->filter('Flatten', array(' - ',
                 function (DataTable $subtable) use ($self) {
-                    $self->filterDataTable($subtable, true);
+                    $self->filterDataTable($subtable);
             }));
         }
 
@@ -232,12 +232,10 @@ class API extends \Piwik\Plugin\API
      * @param DataTable $dataTable
      * @ignore
      */
-    public function filterDataTable($dataTable, $filterNow)
+    public function filterDataTable($dataTable)
     {
-        $filter = $filterNow ? 'filter' : 'queueFilter';
-
-        $dataTable->$filter('ReplaceColumnNames');
-        $dataTable->$filter('ReplaceSummaryRowLabel');
+        $dataTable->queueFilter('ReplaceColumnNames');
+        $dataTable->queueFilter('ReplaceSummaryRowLabel');
         $dataTable->filter(function (DataTable $table) {
             $row = $table->getRowFromLabel(Archiver::EVENT_NAME_NOT_SET);
             if ($row) {
