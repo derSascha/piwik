@@ -297,20 +297,14 @@ class API extends \Piwik\Plugin\API
 
     public function getWebsites($idSite, $period, $date, $segment = false, $expanded = false, $flat = false)
     {
+        $dataTable = $this->getDataTableFromArchive(Archiver::WEBSITES_RECORD_NAME, $idSite, $period, $date, $segment, $expanded, $idSubtable = null, $depth = null, $flat);
+
         if ($flat) {
-            $expanded = true;
-        }
-
-        $dataTable = $this->getDataTable(Archiver::WEBSITES_RECORD_NAME, $idSite, $period, $date, $segment, $expanded);
-
-        if (!$flat) {
-            $dataTable->filter('AddSegmentByLabel', array('referrerName'));
+            $dataTable->filterSubtables(function (DataTable $subtable, API $self) {
+                $self->filterUrlsFromWebsiteId($subtable);
+            }, array($this));
         } else {
-            $self = $this;
-            $dataTable->filter('Flatten', array('/',
-                function (DataTable $subtable) use ($self) {
-                    $self->filterUrlsFromWebsiteId($subtable);
-            }));
+            $dataTable->filter('AddSegmentByLabel', array('referrerName'));
         }
 
         return $dataTable;

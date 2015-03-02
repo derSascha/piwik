@@ -12,11 +12,6 @@ use Piwik\Common;
 use Piwik\DataTable\BaseFilter;
 use Piwik\DataTable\Row;
 use Piwik\DataTable;
-use Piwik\Plugin\Metric;
-use Piwik\Plugins\CoreHome\Columns\Metrics\ActionsPerVisit;
-use Piwik\Plugins\CoreHome\Columns\Metrics\AverageTimeOnSite;
-use Piwik\Plugins\CoreHome\Columns\Metrics\BounceRate;
-use Piwik\Plugins\CoreHome\Columns\Metrics\ConversionRate;
 
 /**
  * Adds processed metrics columns to a {@link DataTable} using metrics that already exist.
@@ -49,14 +44,19 @@ class Flatten extends BaseFilter
      */
     public $recursiveLabelSeparator = ' - ';
 
-    private $subTableCallback;
+    private $subTableFilter;
 
     private $rows = array();
 
-    public function __construct($table, $recursiveLabelSeparator, $subTableCallback = null)
+    public function __construct($table, $recursiveLabelSeparator, $subTableFilter = null)
     {
         $this->recursiveLabelSeparator = $recursiveLabelSeparator;
-        $this->subTableCallback = $subTableCallback;
+
+        if (!is_array($subTableFilter)) {
+            $subTableFilter = array($subTableFilter, array());
+        }
+
+        $this->subTableFilter = $subTableFilter;
         parent::__construct($table);
     }
 
@@ -70,7 +70,6 @@ class Flatten extends BaseFilter
     {
         $table->applyQueuedFilters();
 
-        $table->setMetadata('isFlattened', true);
         $rows = $table->getRowsWithoutSummaryRow();
 
         foreach ($rows as $id => $row) {
@@ -78,8 +77,6 @@ class Flatten extends BaseFilter
         }
 
         $table->setRows($this->rows);
-
-        Common::destroy($newDataTable);
     }
 
     /**
@@ -119,8 +116,8 @@ class Flatten extends BaseFilter
         if (empty($subTable)) {
             $this->rows[] = $row;
         } else {
-            if ($this->subTableCallback) {
-                call_user_func($this->subTableCallback, $subTable, $row);
+            if ($this->subTableFilter[0]) {
+                $subTable->filter($this->subTableFilter[0], $this->subTableFilter[1]);
             }
 
             $subTable->applyQueuedFilters();

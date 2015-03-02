@@ -469,6 +469,20 @@ class DataTable implements DataTableInterface, \IteratorAggregate, \ArrayAccess
         $filter->filter($this);
     }
 
+    public function filterSubtables($className, $parameters = array())
+    {
+        $recursive = $this->enableRecursiveFilters;
+        $this->disableRecursiveFilters();
+        foreach ($this->getRows() as $row) {
+            $subtable = $row->getSubtable();
+            if ($subtable) {
+                $subtable->filter($className, $parameters);
+                $subtable->filterSubtables($className, $parameters);
+            }
+        }
+        $this->enableRecursiveFilters = $recursive;
+    }
+
     /**
      * Adds a filter and a list of parameters to the list of queued filters. These filters will be
      * executed when {@link applyQueuedFilters()} is called.

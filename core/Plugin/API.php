@@ -9,6 +9,8 @@
 
 namespace Piwik\Plugin;
 
+use Piwik\Archive;
+use Piwik\DataTable;
 use Piwik\Singleton;
 
 /**
@@ -41,5 +43,23 @@ use Piwik\Singleton;
  */
 abstract class API extends Singleton
 {
+
+    protected function getDataTableFromArchive($name, $idSite, $period, $date, $segment, $expanded = false, $idSubtable = null, $depth = null, $flat = false)
+    {
+        if ($flat && !$idSubtable) {
+            $expanded = true;
+        }
+
+        $dataTable = Archive::getDataTableFromArchive($name, $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth);
+
+        if ($flat) {
+            $dataTable->disableRecursiveFilters();
+            $dataTable->filterSubtables('ReplaceColumnNames');
+        }
+
+        $dataTable->queueFilter('ReplaceColumnNames');
+
+        return $dataTable;
+    }
 
 }

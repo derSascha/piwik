@@ -154,13 +154,13 @@ class API extends \Piwik\Plugin\API
         $this->checkSecondaryDimension($name, $secondaryDimension);
         $recordName = $this->getRecordNameForAction($name, $secondaryDimension);
 
+        $dataTable = $this->getDataTableFromArchive($recordName, $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth = null, $flat);
+
         if ($flat) {
-            $expanded = true;
-        }
-
-        $dataTable = Archive::getDataTableFromArchive($recordName, $idSite, $period, $date, $segment, $expanded, $idSubtable);
-
-        if (empty($idSubtable) && !$flat) {
+            $dataTable->filterSubtables(function (DataTable $subtable, API $self) {
+                $self->filterDataTable($subtable);
+            }, array($this));
+        } else {
             $dataTable->filter('AddSegmentValue', array(function ($label) {
                 if ($label === Archiver::EVENT_NAME_NOT_SET) {
                     return false;
@@ -171,14 +171,6 @@ class API extends \Piwik\Plugin\API
         }
 
         $this->filterDataTable($dataTable);
-
-        if ($flat) {
-            $self = $this;
-            $dataTable->filter('Flatten', array(' - ',
-                function (DataTable $subtable) use ($self) {
-                    $self->filterDataTable($subtable);
-            }));
-        }
 
         return $dataTable;
     }
@@ -234,8 +226,6 @@ class API extends \Piwik\Plugin\API
      */
     public function filterDataTable($dataTable)
     {
-        $dataTable->queueFilter('ReplaceColumnNames');
-        $dataTable->queueFilter('ReplaceSummaryRowLabel');
         $dataTable->filter(function (DataTable $table) {
             $row = $table->getRowFromLabel(Archiver::EVENT_NAME_NOT_SET);
             if ($row) {

@@ -145,7 +145,13 @@ class DataTablePostProcessor
             if (Common::getRequestVar('include_aggregate_rows', '0', 'string', $this->request) == '1') {
                 $flattener->includeAggregateRows();
             }
-            $dataTable = $flattener->flatten($dataTable);
+
+            $recursiveLabelSeparator = ' - ';
+            if ($this->report) {
+                $recursiveLabelSeparator = $this->report->getRecursiveLabelSeparator();
+            }
+
+            $dataTable = $flattener->flatten($dataTable, $recursiveLabelSeparator);
         }
         return $dataTable;
     }

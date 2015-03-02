@@ -9,7 +9,6 @@
 namespace Piwik\Plugins\Actions;
 
 use Exception;
-use Piwik\API\Request;
 use Piwik\Archive;
 use Piwik\Common;
 use Piwik\DataTable;
@@ -84,40 +83,16 @@ class API extends \Piwik\Plugin\API
      * @param bool $expanded
      * @param bool|int $idSubtable
      * @param bool|int $depth
+     * @param bool|int $flat
      *
      * @return DataTable|DataTable\Map
      */
     public function getPageUrls($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false,
-                                $depth = false, $flat= false)
+                                $depth = false, $flat = false)
     {
-        if ($flat && !$idSubtable) {
-            $expanded = true;
-        }
+        $dataTable = $this->getDataTableFromArchive('Actions_actions_url', $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth, $flat);
 
-        $dataTable = $this->getDataTableFromArchive('Actions_actions_url', $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth);
-
-        if ($flat) {
-        ///    $dataTable->disableRecursiveFilters();
-        }
-
-        $this->filterActionsDataTable($dataTable, $expanded, $flat);
-
-        if ($flat) {
-            $dataTable->filter('Flatten', array('/',
-                function (DataTable $subtable) {
-                    $subtable->filter('ReplaceSummaryRowLabel');
-                    $subtable->filter(function (DataTable $dataTable) {
-                        foreach ($dataTable->getRows() as $row) {
-                            $url = $row->getMetadata('url');
-                            if ($url) {
-                                $row->setMetadata('segmentValue', urldecode($url));
-                            }
-                        }
-                    });
-                },
-                )
-            );
-        }
+        $this->filterActionsDataTable($dataTable);
 
         return $dataTable;
     }
@@ -201,10 +176,12 @@ class API extends \Piwik\Plugin\API
         return $dataTable;
     }
 
-    public function getPageTitles($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false)
+    public function getPageTitles($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false, $flat = false)
     {
-        $dataTable = $this->getDataTableFromArchive('Actions_actions', $idSite, $period, $date, $segment, $expanded, $idSubtable);
-        $this->filterActionsDataTable($dataTable, $expanded);
+        $dataTable = $this->getDataTableFromArchive('Actions_actions', $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth = null, $flat);
+
+        $this->filterActionsDataTable($dataTable);
+
         return $dataTable;
     }
 
@@ -475,26 +452,12 @@ class API extends \Piwik\Plugin\API
      * @param bool $expanded
      * @param bool $flat
      */
-    private function filterActionsDataTable($dataTable, $expanded = false, $flat = false)
+    private function filterActionsDataTable($dataTable)
     {
         // Must be applied before Sort in this case, since the DataTable can contain both int and strings indexes
         // (in the transition period between pre 1.2 and post 1.2 datatable structure)
-        $dataTable->filter('ReplaceColumnNames');
 
-        $dataTable->filter(function (DataTable $dataTable) {
-            foreach ($dataTable->getRows() as $row) {
-                $url = $row->getMetadata('url');
-                if ($url) {
-                    $row->setMetadata('segmentValue', urldecode($url));
-                }
-            }
-        });
-/*
-        $dataTable->queueFilter('GroupBy', array('label', function ($label) {
-            return urldecode($label);
-        }));
-*/
-        $dataTable->queueFilter('ReplaceSummaryRowLabel');
+        $dataTable->filter('Piwik\Plugins\Actions\DataTable\Filter\Actions');
 
         return $dataTable;
     }
@@ -547,11 +510,6 @@ class API extends \Piwik\Plugin\API
                       return !strlen($visits);
                   })
         );
-    }
-
-    protected function getDataTableFromArchive($name, $idSite, $period, $date, $segment, $expanded = false, $idSubtable = null, $depth = null)
-    {
-        return Archive::getDataTableFromArchive($name, $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth);
     }
 
     private function addPageProcessedMetrics(DataTable\DataTableInterface $dataTable)
