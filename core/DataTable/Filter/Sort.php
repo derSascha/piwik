@@ -74,18 +74,15 @@ Sort extends BaseFilter
      */
     public function numberSort($rowA, $rowB)
     {
-        $valA = $rowA[0];
-        $valB = $rowB[0];
-
-        if (isset($valA) && isset($valB)) {
-            if ($valA != $valB || !isset($rowA[1])) {
-                return $this->sign * ($valA < $valB ? -1 : 1);
+        if (isset($rowA[0]) && isset($rowB[0])) {
+            if ($rowA[0] != $rowB[0] || !isset($rowA[1])) {
+                return $this->sign * ($rowA[0] < $rowB[0] ? -1 : 1);
             } else {
                 return -1 * $this->sign * strnatcasecmp($rowA[1], $rowB[1]);
             }
-        } elseif (!isset($valB)) {
+        } elseif (!isset($rowB[0])) {
             return -1;
-        } elseif (!isset($valA)) {
+        } elseif (!isset($rowA[0])) {
             return 1;
         }
 
@@ -234,7 +231,6 @@ Sort extends BaseFilter
             }
         }
 
-       // $table->sort(array($this, $methodToUse), $this->columnToSort);
         $this->sort($table, $methodToUse);
     }
 
