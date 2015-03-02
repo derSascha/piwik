@@ -174,7 +174,7 @@ class Visualization extends ViewDataTable
         try {
             $this->beforeLoadDataTable();
 
-            $this->loadDataTableFromAPI(array('disable_generic_filters' => 1, 'format_metrics' => 0));
+            $this->loadDataTableFromAPI(array('disable_generic_filters' => 1, 'computeProcessedMetrics' => '0', 'format_metrics' => 0));
             $this->postDataTableLoadedFromAPI();
 
             $requestPropertiesAfterLoadDataTable = $this->requestConfig->getProperties();
@@ -377,7 +377,7 @@ class Visualization extends ViewDataTable
             $this->dataTable = $postProcessor->applyGenericFilters($this->dataTable);
         }
 
-        $postProcessor->applyComputeProcessedMetrics($this->dataTable);
+        $this->dataTable->filter(array($postProcessor, 'computeProcessedMetrics'));
 
         $this->afterGenericFiltersAreAppliedToLoadedDataTable();
 

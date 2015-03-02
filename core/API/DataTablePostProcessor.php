@@ -402,6 +402,8 @@ class DataTablePostProcessor
 
     public function applyComputeProcessedMetrics(DataTableInterface $dataTable)
     {
-        $dataTable->filter(array($this, 'computeProcessedMetrics'));
+        if (Common::getRequestVar('computeProcessedMetrics', '1', 'string', $this->request) == '1') {
+            $dataTable->filter(array($this, 'computeProcessedMetrics'));
+        }
     }
 }
