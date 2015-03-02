@@ -261,6 +261,7 @@ Sort extends BaseFilter
 
         $rows = $table->getRowsWithoutSummaryRow();
 
+        // get column value and label only once for performance tweak
         $values = array();
         foreach ($rows as $key => $row) {
             $values[$key] = array($this->getColumnValue($row), $row->getColumn('label'));
@@ -278,7 +279,7 @@ Sort extends BaseFilter
         unset($rows);
         unset($sortedRows);
 
-        if ($table->sortRecursiveEnabled()) {
+        if ($table->isSortRecursiveEnabled()) {
             foreach ($table->getRows() as $row) {
 
                 $subTable = $row->getSubtable();

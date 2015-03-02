@@ -365,7 +365,7 @@ class DataTable implements DataTableInterface, \IteratorAggregate, \ArrayAccess
 
         usort($this->rows, $functionCallback);
 
-        if ($this->sortRecursiveEnabled()) {
+        if ($this->isSortRecursiveEnabled()) {
             foreach ($this->getRows() as $row) {
 
                 $subTable = $row->getSubtable();
@@ -401,7 +401,7 @@ class DataTable implements DataTableInterface, \IteratorAggregate, \ArrayAccess
     /**
      * @ignore
      */
-    public function sortRecursiveEnabled()
+    public function isSortRecursiveEnabled()
     {
         return $this->enableRecursiveSort === true;
     }

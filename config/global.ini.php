@@ -391,7 +391,6 @@ datatable_archiving_maximum_rows_standard = 500
 ; maximum number of rows to fetch from the database when archiving. if set to 0, no limit is used.
 ; this can be used to speed up the archiving process, but is only useful if you're site has a large
 ; amount of actions, referrers or custom variable name/value pairs.
-; we should rename this one!
 archiving_ranking_query_row_limit = 50000
 
 ; maximum number of actions that is shown in the visitor log for each visitor
