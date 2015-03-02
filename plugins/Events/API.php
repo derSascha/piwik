@@ -156,10 +156,10 @@ class API extends \Piwik\Plugin\API
 
         $dataTable = $this->getDataTableFromArchive($recordName, $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth = null, $flat);
 
+        $dataTable->filter('Piwik\Plugins\Events\DataTable\Filter\ReplaceEventNameNotSet');
+
         if ($flat) {
-            $dataTable->filterSubtables(function (DataTable $subtable, API $self) {
-                $self->filterDataTable($subtable);
-            }, array($this));
+            $dataTable->filterSubtables('Piwik\Plugins\Events\DataTable\Filter\ReplaceEventNameNotSet');
         } else {
             $dataTable->filter('AddSegmentValue', array(function ($label) {
                 if ($label === Archiver::EVENT_NAME_NOT_SET) {
@@ -169,8 +169,6 @@ class API extends \Piwik\Plugin\API
                 return $label;
             }));
         }
-
-        $this->filterDataTable($dataTable);
 
         return $dataTable;
     }
@@ -218,19 +216,5 @@ class API extends \Piwik\Plugin\API
     public function getCategoryFromNameId($idSite, $period, $date, $idSubtable, $segment = false)
     {
         return $this->getDataTable(__FUNCTION__, $idSite, $period, $date, $segment, $expanded = false, $idSubtable);
-    }
-
-    /**
-     * @param DataTable $dataTable
-     * @ignore
-     */
-    public function filterDataTable($dataTable)
-    {
-        $dataTable->filter(function (DataTable $table) {
-            $row = $table->getRowFromLabel(Archiver::EVENT_NAME_NOT_SET);
-            if ($row) {
-                $row->setColumn('label', Piwik::translate('General_NotDefined', Piwik::translate('Events_EventName')));
-            }
-        });
     }
 }

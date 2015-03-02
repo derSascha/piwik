@@ -300,9 +300,7 @@ class API extends \Piwik\Plugin\API
         $dataTable = $this->getDataTableFromArchive(Archiver::WEBSITES_RECORD_NAME, $idSite, $period, $date, $segment, $expanded, $idSubtable = null, $depth = null, $flat);
 
         if ($flat) {
-            $dataTable->filterSubtables(function (DataTable $subtable, API $self) {
-                $self->filterUrlsFromWebsiteId($subtable);
-            }, array($this));
+            $dataTable->filterSubtables('Piwik\Plugins\Referrers\DataTable\Filter\UrlsFromWebsiteId');
         } else {
             $dataTable->filter('AddSegmentByLabel', array('referrerName'));
         }
@@ -313,7 +311,7 @@ class API extends \Piwik\Plugin\API
     public function getUrlsFromWebsiteId($idSite, $period, $date, $idSubtable, $segment = false)
     {
         $dataTable = $this->getDataTable(Archiver::WEBSITES_RECORD_NAME, $idSite, $period, $date, $segment, $expanded = false, $idSubtable);
-        $this->filterUrlsFromWebsiteId($dataTable);
+        $dataTable->filter('Piwik\Plugins\Referrers\DataTable\Filter\UrlsFromWebsiteId');
 
         return $dataTable;
     }
@@ -541,19 +539,6 @@ class API extends \Piwik\Plugin\API
                 }
             }
         }
-    }
-
-    /**
-     * @param DataTable $dataTable
-     */
-    public function filterUrlsFromWebsiteId($dataTable)
-    {
-        // the htmlspecialchars_decode call is for BC for before 1.1
-        // as the Referrer URL was previously encoded in the log tables, but is now recorded raw
-        $dataTable->queueFilter('ColumnCallbackAddMetadata', array('label', 'url', function ($label) {
-            return htmlspecialchars_decode($label);
-        }));
-        $dataTable->queueFilter('ColumnCallbackReplace', array('label', __NAMESPACE__ . '\getPathFromUrl'));
     }
 
 }

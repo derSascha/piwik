@@ -109,11 +109,13 @@ class Flattener extends DataTableManipulator
             $row->setMetadata('logo', $logo);
         }
 
+        /** @var DataTable $subTable */
         $subTable = $row->getSubtable();
         if (false === $subTable || null === $subTable) {
             $subTable = $this->loadSubtable($dataTable, $row);
         } else if ($subTable) {
             $subTable->applyQueuedFilters();
+            $row->deleteMetadata('idsubdatatable_in_db');
         }
 
         $row->removeSubtable();

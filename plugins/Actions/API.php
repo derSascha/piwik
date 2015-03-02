@@ -463,25 +463,6 @@ class API extends \Piwik\Plugin\API
     }
 
     /**
-     * Common filters for all Actions API
-     *
-     * @param DataTable|DataTable\Simple|DataTable\Map $dataTable
-     * @param bool $expanded
-     * @param bool $flat
-     */
-    public function filterActionsSubDataTable($dataTable)
-    {
-        $dataTable->filter(function (DataTable $dataTable) {
-            foreach ($dataTable->getRows() as $row) {
-                $url = $row->getMetadata('url');
-                if ($url) {
-                    $row->setMetadata('segmentValue', urldecode($url));
-                }
-            }
-        });
-    }
-
-    /**
      * Removes DataTable rows referencing actions that were never the first action of a visit.
      *
      * @param DataTable $dataTable

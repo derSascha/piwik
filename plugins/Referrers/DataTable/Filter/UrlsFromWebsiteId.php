@@ -6,13 +6,13 @@
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
  */
-namespace Piwik\Plugins\Actions\DataTable\Filter;
+namespace Piwik\Plugins\Referrers\DataTable\Filter;
 
 use Piwik\DataTable\BaseFilter;
 use Piwik\DataTable\Row;
 use Piwik\DataTable;
 
-class Actions extends BaseFilter
+class UrlsFromWebsiteId extends BaseFilter
 {
     /**
      * Constructor.
@@ -29,19 +29,12 @@ class Actions extends BaseFilter
      */
     public function filter($table)
     {
-        $table->filter(function (DataTable $dataTable) {
-            foreach ($dataTable->getRows() as $row) {
-                $url = $row->getMetadata('url');
-                if ($url) {
-                    $row->setMetadata('segmentValue', urldecode($url));
-                }
-            }
-        });
-
-        // TODO can we remove this one again?
-        $table->queueFilter('GroupBy', array('label', function ($label) {
-            return urldecode($label);
+        // the htmlspecialchars_decode call is for BC for before 1.1
+        // as the Referrer URL was previously encoded in the log tables, but is now recorded raw
+        $table->queueFilter('ColumnCallbackAddMetadata', array('label', 'url', function ($label) {
+            return htmlspecialchars_decode($label);
         }));
+        $table->queueFilter('ColumnCallbackReplace', array('label', 'Piwik\Plugins\Referrers\getPathFromUrl'));
 
         foreach ($table->getRows() as $row) {
             $subtable = $row->getSubtable();
