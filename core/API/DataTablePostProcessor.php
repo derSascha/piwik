@@ -85,8 +85,8 @@ class DataTablePostProcessor
         //       this is non-trivial since it will require, eg, to make sure processed metrics aren't added
         //       after pivotBy is handled.
         $dataTable = $this->applyPivotByFilter($dataTable);
-        $dataTable = $this->applyFlattener($dataTable);
         $dataTable = $this->applyTotalsCalculator($dataTable);
+        $dataTable = $this->applyFlattener($dataTable);
 
         $dataTable = $this->applyGenericFilters($dataTable);
 
