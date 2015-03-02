@@ -218,9 +218,9 @@ class API extends \Piwik\Plugin\API
         return $dataTable;
     }
 
-    public function getDownloads($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false)
+    public function getDownloads($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false, $flat = false)
     {
-        $dataTable = $this->getDataTableFromArchive('Actions_downloads', $idSite, $period, $date, $segment, $expanded, $idSubtable);
+        $dataTable = $this->getDataTableFromArchive('Actions_downloads', $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth = null, $flat);
         $this->filterActionsDataTable($dataTable, $expanded);
         return $dataTable;
     }
@@ -233,9 +233,9 @@ class API extends \Piwik\Plugin\API
         return $dataTable;
     }
 
-    public function getOutlinks($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false)
+    public function getOutlinks($idSite, $period, $date, $segment = false, $expanded = false, $idSubtable = false, $flat = false)
     {
-        $dataTable = $this->getDataTableFromArchive('Actions_outlink', $idSite, $period, $date, $segment, $expanded, $idSubtable);
+        $dataTable = $this->getDataTableFromArchive('Actions_outlink', $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth = null, $flat);
         $this->filterActionsDataTable($dataTable, $expanded);
         return $dataTable;
     }

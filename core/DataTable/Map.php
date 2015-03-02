@@ -185,6 +185,26 @@ class Map implements DataTableInterface
     }
 
     /**
+     * @ignore
+     */
+    public function disableRecursiveFilters()
+    {
+        foreach ($this->getDataTables() as $table) {
+            $table->disableRecursiveFilters();
+        }
+    }
+
+    /**
+     * @ignore
+     */
+    public function enableRecursiveFilters()
+    {
+        foreach ($this->getDataTables() as $table) {
+            $table->enableRecursiveFilters();
+        }
+    }
+
+    /**
      * Renames the given column in each contained {@link DataTable}.
      *
      * See {@link DataTable::renameColumn()}.
