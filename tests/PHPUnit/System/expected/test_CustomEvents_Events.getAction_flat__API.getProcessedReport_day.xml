@@ -231,7 +231,7 @@
 		<result prettyDate="Saturday 9 January 2010" />
 	</reportMetadata>
 	<reportTotal>
-		<nb_visits>38</nb_visits>
-		<nb_uniq_visitors>38</nb_uniq_visitors>
+		<nb_visits>42</nb_visits>
+		<nb_uniq_visitors>40</nb_uniq_visitors>
 	</reportTotal>
 </result>

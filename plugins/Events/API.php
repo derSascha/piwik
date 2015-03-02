@@ -156,8 +156,6 @@ class API extends \Piwik\Plugin\API
 
         $dataTable = $this->getDataTableFromArchive($recordName, $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth = null, $flat);
 
-        $dataTable->filter('Piwik\Plugins\Events\DataTable\Filter\ReplaceEventNameNotSet');
-
         if ($flat) {
             $dataTable->filterSubtables('Piwik\Plugins\Events\DataTable\Filter\ReplaceEventNameNotSet');
         } else {
@@ -169,6 +167,8 @@ class API extends \Piwik\Plugin\API
                 return $label;
             }));
         }
+
+        $dataTable->filter('Piwik\Plugins\Events\DataTable\Filter\ReplaceEventNameNotSet');
 
         return $dataTable;
     }

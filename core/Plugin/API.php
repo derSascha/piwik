@@ -57,7 +57,7 @@ abstract class API extends Singleton
             $dataTable->filterSubtables('ReplaceColumnNames');
         }
 
-        $dataTable->queueFilter('ReplaceColumnNames');
+        $dataTable->filter('ReplaceColumnNames');
 
         return $dataTable;
     }
