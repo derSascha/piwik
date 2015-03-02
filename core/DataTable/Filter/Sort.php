@@ -77,29 +77,19 @@ Sort extends BaseFilter
         $valA = $rowA[0];
         $valB = $rowB[0];
 
-        return !isset($valA)
-        && !isset($valB)
-            ? 0
-            : (
-            !isset($valA)
-                ? 1
-                : (
-            !isset($valB)
-                ? -1
-                : (($valA != $valB
-                || !isset($rowA[1]))
-                ? ($this->sign * (
-                    $valA
-                    < $valB
-                        ? -1
-                        : 1)
-                )
-                : -1 * $this->sign * strnatcasecmp(
-                    $rowA[1],
-                    $rowB[1])
-            )
-            )
-            );
+        if (isset($valA) && isset($valB)) {
+            if ($valA != $valB || !isset($rowA[1])) {
+                return $this->sign * ($valA < $valB ? -1 : 1);
+            } else {
+                return -1 * $this->sign * strnatcasecmp($rowA[1], $rowB[1]);
+            }
+        } elseif (!isset($valB)) {
+            return -1;
+        } elseif (!isset($valA)) {
+            return 1;
+        }
+
+        return 0;
     }
 
     /**

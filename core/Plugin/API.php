@@ -52,12 +52,11 @@ abstract class API extends Singleton
 
         $dataTable = Archive::getDataTableFromArchive($name, $idSite, $period, $date, $segment, $expanded, $idSubtable, $depth);
 
+        $dataTable->filter('ReplaceColumnNames');
+
         if ($flat) {
             $dataTable->disableRecursiveFilters();
-            $dataTable->filterSubtables('ReplaceColumnNames');
         }
-
-        $dataTable->filter('ReplaceColumnNames');
 
         return $dataTable;
     }
