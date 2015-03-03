@@ -265,7 +265,10 @@ class DataTablePostProcessor
         ) {
             $dataTable->filter('ColumnDelete', array($hideColumns, $showColumns));
         } else {
-            $this->removeTemporaryMetrics($dataTable);
+
+            if (Common::getRequestVar('computeProcessedMetrics', '1', 'string', $this->request) == '1') {
+                $this->removeTemporaryMetrics($dataTable);
+            }
         }
 
         return $dataTable;

@@ -65,7 +65,8 @@ class Flattener extends DataTableManipulator
         // now, we'll try to apply filters to rows that have already been manipulated. this results in errors like
         // 'column ... already exists'.
         $keepFilters = true;
-        if (Common::getRequestVar('disable_queued_filters', 0, 'int', $this->request) == 0) {
+        if (Common::getRequestVar('disable_queued_filters', 0, 'int', $this->request) == 0
+        || Common::getRequestVar('force_queued_filters_before_flatten', 0, 'int', $this->request) == 1) {
             $dataTable->applyQueuedFilters();
             $keepFilters = false;
         }
@@ -94,7 +95,7 @@ class Flattener extends DataTableManipulator
             if ($this->recursiveLabelSeparator == '/') {
                 if (substr($label, 0, 1) == '/') {
                     $label = substr($label, 1);
-                } elseif ($rowId === DataTable::ID_SUMMARY_ROW && $labelPrefix && $label !== DataTable::LABEL_SUMMARY_ROW) {
+                } elseif ($rowId === DataTable::ID_SUMMARY_ROW && $labelPrefix && $label != DataTable::LABEL_SUMMARY_ROW) {
                     $label = ' - ' . $label;
                 }
             }
