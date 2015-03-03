@@ -59,6 +59,9 @@ class DataTablePostProcessor
      */
     private $formatter;
 
+    private $callbackBeforeGenericFilters;
+    private $callbackAfterGenericFilters;
+
     /**
      * Constructor.
      */
@@ -70,7 +73,22 @@ class DataTablePostProcessor
 
         $this->report = Report::factory($apiModule, $apiMethod);
         $this->apiInconsistencies = new Inconsistencies();
-        $this->formatter = new Formatter();
+        $this->setFormatter(new Formatter());
+    }
+
+    public function setFormatter(Formatter $formatter)
+    {
+        $this->formatter = $formatter;
+    }
+
+    public function setCallbackBeforeGenericFilters($callbackBeforeGenericFilters)
+    {
+        $this->callbackBeforeGenericFilters = $callbackBeforeGenericFilters;
+    }
+
+    public function setCallbackAfterGenericFilters($callbackAfterGenericFilters)
+    {
+        $this->callbackAfterGenericFilters = $callbackAfterGenericFilters;
     }
 
     /**
@@ -88,19 +106,24 @@ class DataTablePostProcessor
         $dataTable = $this->applyTotalsCalculator($dataTable);
         $dataTable = $this->applyFlattener($dataTable);
 
-        $dataTable = $this->applyGenericFilters($dataTable);
+        if ($this->callbackBeforeGenericFilters) {
+            call_user_func($this->callbackBeforeGenericFilters, $dataTable);
+        }
 
+        $dataTable = $this->applyGenericFilters($dataTable);
         $this->applyComputeProcessedMetrics($dataTable);
+
+        if ($this->callbackAfterGenericFilters) {
+            call_user_func($this->callbackAfterGenericFilters, $dataTable);
+        }
 
         // we automatically safe decode all datatable labels (against xss)
         $dataTable->queueFilter('SafeDecodeLabel');
-
         $dataTable = $this->convertSegmentValueToSegment($dataTable);
         $dataTable = $this->applyQueuedFilters($dataTable);
         $dataTable = $this->applyRequestedColumnDeletion($dataTable);
         $dataTable = $this->applyLabelFilter($dataTable);
         $dataTable = $this->applyMetricsFormatting($dataTable);
-
         return $dataTable;
     }
 
