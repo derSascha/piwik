@@ -728,6 +728,10 @@ class Visualization extends ViewDataTable
             $request['format_metrics'] = '1';
         }
 
+        if (!$this->requestConfig->disable_queued_filters && array_key_exists('disable_queued_filters', $request)) {
+            unset($request['disable_queued_filters']);
+        }
+
         return $request;
     }
 }
